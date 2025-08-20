@@ -1,0 +1,310 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    // ========================================
+    // 🚀 DEVELOPMENT SETUP
+    // ========================================
+    {
+      "label": "Setup Development Environment",
+      "type": "shell",
+      "command": "uv",
+      "args": ["sync", "--dev"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "📦 Install all dependencies including dev dependencies"
+    },
+
+    // ========================================
+    // 🎨 CODE QUALITY & FORMATTING
+    // ========================================
+    {
+      "label": "Format Code",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "ruff", "format", "."],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "✨ Format Python code using ruff"
+    },
+    {
+      "label": "Lint Code",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "ruff", "check", "."],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [
+        {
+          "owner": "python",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.+):(\\d+):(\\d+):\\s+(\\w+):\\s+(.+)\\s+\\((.+)\\)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5,
+            "code": 6
+          }
+        }
+      ],
+      "detail": "🔍 Lint Python code using ruff"
+    },
+    {
+      "label": "Fix Linting Issues",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "ruff", "check", ".", "--fix"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "🛠️ Auto-fix linting issues where possible"
+    },
+    {
+      "label": "Type Check",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "mypy", "."],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [
+        {
+          "owner": "mypy",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.+):(\\d+):(\\d+):\\s+(error|warning|note):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "column": 3,
+            "severity": 4,
+            "message": 5
+          }
+        }
+      ],
+      "detail": "🔬 Run type checking with mypy"
+    },
+
+    // ========================================
+    // 🧪 TESTING
+    // ========================================
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": "uv",
+      "args": ["run", "pytest"],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [
+        {
+          "owner": "python",
+          "fileLocation": "absolute",
+          "pattern": {
+            "regexp": "^(.+):(\\d+):\\s+(.+)$",
+            "file": 1,
+            "line": 2,
+            "message": 3
+          }
+        }
+      ],
+      "detail": "🧪 Run all tests with pytest"
+    },
+    {
+      "label": "Run Tests with Coverage",
+      "type": "shell",
+      "command": "uv",
+      "args": [
+        "run",
+        "pytest",
+        "--cov=src",
+        "--cov-report=html",
+        "--cov-report=term"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "dependsOrder": "sequence",
+      "dependsOn": ["Setup Development Environment"],
+      "detail": "📊 Run tests with coverage report"
+    },
+
+    // ========================================
+    // 🚀 SERVER MANAGEMENT
+    // ========================================
+    {
+      "label": "Start FastAPI Server",
+      "type": "shell",
+      "command": "uv",
+      "args": [
+        "run",
+        "uvicorn",
+        "main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "isBackground": true,
+      "detail": "🌟 Start FastAPI development server with auto-reload"
+    },
+    {
+      "label": "Start FastAPI Server (Production)",
+      "type": "shell",
+      "command": "uv",
+      "args": [
+        "run",
+        "uvicorn",
+        "main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "isBackground": true,
+      "detail": "🏭 Start FastAPI server in production mode"
+    },
+
+    // ========================================
+    // 🔍 COMPREHENSIVE CHECKS
+    // ========================================
+    {
+      "label": "Full Code Quality Check",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "uv run ruff check . && uv run ruff format --check . && uv run mypy . && uv run pytest"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true
+      },
+      "problemMatcher": [],
+      "dependsOrder": "sequence",
+      "detail": "🎯 Run complete code quality checks (lint, format, type check, test)"
+    },
+    {
+      "label": "Pre-commit Check",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "uv run ruff format . && uv run ruff check . --fix && uv run mypy . && uv run pytest"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "✅ Format, fix issues, type check and test - ready for commit"
+    },
+
+    // ========================================
+    // 🧹 MAINTENANCE
+    // ========================================
+    {
+      "label": "Clean Cache",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-c",
+        "find . -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true && find . -name '*.pyc' -delete && rm -rf .pytest_cache .mypy_cache .ruff_cache 2>/dev/null || true"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "problemMatcher": [],
+      "detail": "🗑️ Clean Python cache files and directories"
+    }
+  ]
+}
