@@ -1,7 +1,6 @@
 """Application layer for the incident extraction system."""
 
 from .dtos.incident_dtos import (
-    ErrorDetails,
     ExtractIncidentRequest,
     ExtractIncidentResponse,
     IncidentEnrichmentResult,
@@ -20,7 +19,6 @@ __all__ = [
     "IncidentValidationResult",
     "IncidentEnrichmentResult",
     "ProcessingMetadata",
-    "ErrorDetails",
     # Interfaces
     "IncidentExtractionServiceInterface",
     # Use Cases

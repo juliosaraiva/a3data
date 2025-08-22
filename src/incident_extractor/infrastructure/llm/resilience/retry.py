@@ -6,7 +6,8 @@ import asyncio
 import logging
 import random
 import time
-from typing import Any, Callable, TypeVar
+from collections.abc import Callable
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -75,7 +76,7 @@ class RetryExhaustedError(Exception):
         self.last_exception = last_exception
 
 
-async def retry_with_backoff(func: Callable[..., T], config: RetryConfig, *args: Any, **kwargs: Any) -> T:
+async def retry_with_backoff[T](func: Callable[..., T], config: RetryConfig, *args: Any, **kwargs: Any) -> T:
     """Execute function with retry and exponential backoff.
 
     Args:
@@ -133,7 +134,7 @@ async def retry_with_backoff(func: Callable[..., T], config: RetryConfig, *args:
 
             # If this was the last attempt, raise RetryExhaustedError
             if attempt == config.max_attempts - 1:
-                raise RetryExhaustedError(attempts, e)
+                raise RetryExhaustedError(attempts, e) from e
 
         except Exception as e:
             # Non-retryable exception, re-raise immediately
