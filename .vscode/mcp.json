@@ -1,0 +1,10 @@
+// VSCode MCPs
+{
+  "servers": {
+    "taskmanager": {
+      "command": "npx",
+      "args": ["@kazuph/mcp-taskmanager"],
+      "env": {}
+    }
+  }
+}

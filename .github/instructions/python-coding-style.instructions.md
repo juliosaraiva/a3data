@@ -30,11 +30,12 @@ This is a Python 3.13+ repository using modern Python development practices. Fol
 - Prefer f-strings for string formatting
 - Use trailing commas in multi-line structures
 - Group imports: standard library, third-party, local
+- Imports MUST be on the top of the file
 
 ### Type Hints
 - Use type hints for all function parameters and return values
 - Import types from `typing` or use built-in generics (Python 3.9+)
-- Use `Optional[T]` or `T | None` for nullable types
+- Avoid using `Optional[T]`. Use `T | None` for nullable types instead.
 
 ### Naming Conventions
 - Functions/variables: `snake_case`

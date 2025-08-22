@@ -13,22 +13,33 @@ import argparse
 import sys
 from pathlib import Path
 
+import uvicorn
+from config import settings
+
 # Add the project root to Python path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
-
-import uvicorn
-
-from config import settings
 
 
 def main():
     """Main entry point for development server."""
     parser = argparse.ArgumentParser(description="Run Incident Extractor API")
-    parser.add_argument("--host", default=settings.host, help=f"Host to bind to (default: {settings.host})")
-    parser.add_argument("--port", type=int, default=settings.port, help=f"Port to bind to (default: {settings.port})")
     parser.add_argument(
-        "--reload", action="store_true", default=settings.is_development, help="Enable auto-reload for development"
+        "--host",
+        default=settings.host,
+        help=f"Host to bind to (default: {settings.host})",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=settings.port,
+        help=f"Port to bind to (default: {settings.port})",
+    )
+    parser.add_argument(
+        "--reload",
+        action="store_true",
+        default=settings.is_development,
+        help="Enable auto-reload for development",
     )
     parser.add_argument("--debug", action="store_true", default=settings.debug, help="Enable debug mode")
     parser.add_argument(

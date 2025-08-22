@@ -4,11 +4,10 @@ import logging
 from contextlib import asynccontextmanager
 from datetime import datetime
 
+from config import settings
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
-from config import settings
 from models.schemas import (
     ErrorResponse,
     HealthResponse,
@@ -197,7 +196,7 @@ async def extract_incident_info(request: IncidentRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to process incident description",
-        )
+        ) from e
 
 
 @app.get(

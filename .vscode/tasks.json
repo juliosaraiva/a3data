@@ -305,6 +305,73 @@
       },
       "problemMatcher": [],
       "detail": "🗑️ Clean Python cache files and directories"
+    },
+
+    // ========================================
+    // 🔧 MYPY ERROR FIXING
+    // ========================================
+    {
+      "label": "Fix MyPy Errors (Preview)",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/fix_mypy.py", "--dry-run", "--verbose"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "🔍 Preview what MyPy errors can be automatically fixed"
+    },
+    {
+      "label": "Fix MyPy Errors",
+      "type": "shell",
+      "command": "python",
+      "args": ["scripts/fix_mypy.py", "--verbose"],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "🔧 Automatically fix MyPy type errors"
+    },
+    {
+      "label": "Fix Specific MyPy Errors",
+      "type": "shell",
+      "command": "python",
+      "args": [
+        "scripts/fix_mypy.py",
+        "--verbose",
+        "--error-codes",
+        "${input:errorCodes}"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": true
+      },
+      "problemMatcher": [],
+      "detail": "🎯 Fix specific MyPy error types (e.g., no-untyped-def,return)"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "errorCodes",
+      "type": "promptString",
+      "description": "Enter error codes to fix (comma-separated, e.g., 'no-untyped-def,return,misc')"
     }
   ]
 }

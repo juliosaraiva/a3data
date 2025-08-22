@@ -1,20 +1,46 @@
 [project]
 name = "incident-extractor"
 version = "0.1.0"
-description = "Add your description here"
+description = "LLM-powered incident information extraction API"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi>=0.116.1",
-    "langchain>=0.3.27",
-    "langgraph>=0.6.6",
+    "uvicorn[standard]>=0.35.0",
     "pydantic>=2.11.7",
     "pydantic-settings>=2.10.1",
-    "uvicorn>=0.35.0",
+    "httpx>=0.28.0",
+    "structlog>=24.4.0",                # Structured logging
+    "dependency-injector>=4.42.0",      # DI container
+    "python-multipart>=0.0.17",         # Form data support
+    "prometheus-client>=0.21.1",        # Metrics
+    "libcst>=1.5.0",                    # Code transformation library
+    "rich>=13.0.0",                     # Rich CLI output
+    "tenacity>=8.2.0",                  # Retry mechanism with exponential backoff
+    "python-jose[cryptography]>=3.3.0", # JWT handling
+    "passlib[bcrypt]>=1.7.0",           # Password hashing (for future auth)
+    "python-slugify>=8.0.0",            # Text slugification
+    "babel>=2.12.0",                    # Localization support for Brazilian formats
+    "pytz>=2023.3",                     # Timezone handling
+    "httpx>=0.27.0",                    # HTTP client for LLM API calls
 ]
 
 [dependency-groups]
-dev = ["pytest>=8.4.1", "pytest-asyncio>=1.1.0", "ruff>=0.12.9"]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-httpx>=0.30.0",  # HTTP client testing
+    "pytest-env>=1.0.0",     # Environment variable testing
+    "factories>=0.2.0",      # Test data factories
+    "freezegun>=1.2.0",      # Time mocking for tests
+    "faker>=24.0.0",         # Fake data generation
+    "respx>=0.21.0",         # HTTP mocking
+    "ruff>=0.12.9",
+    "mypy>=1.11.2",
+    "pre-commit>=4.0.1",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -25,7 +51,9 @@ packages = ["src"]
 
 [tool.ruff]
 target-version = "py313"
-line-length = 88
+line-length = 130
+
+[tool.ruff.lint]
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
