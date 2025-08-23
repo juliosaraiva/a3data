@@ -1,7 +1,7 @@
 """Request ID middleware for generating correlation IDs."""
 
 import uuid
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware

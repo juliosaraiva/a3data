@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 from ...domain.entities.incident import Incident
 
@@ -23,7 +23,7 @@ class ExtractIncidentRequest(BaseModel):
 
     enrich_data: bool = Field(default=True, description="Whether to enrich extracted data with additional context")
 
-    @validator("extraction_mode")
+    @field_validator("extraction_mode")
     def validate_extraction_mode(cls, v: str) -> str:
         """Validate extraction mode."""
         allowed_modes = ["comprehensive", "quick", "detailed"]
@@ -31,7 +31,7 @@ class ExtractIncidentRequest(BaseModel):
             raise ValueError(f"extraction_mode must be one of {allowed_modes}")
         return v
 
-    @validator("validation_level")
+    @field_validator("validation_level")
     def validate_validation_level(cls, v: str) -> str:
         """Validate validation level."""
         allowed_levels = ["minimal", "standard", "strict"]

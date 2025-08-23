@@ -27,6 +27,129 @@ class LLMRepositoryImpl(LLMRepository):
         self.fallback_clients = fallback_clients or []
         self._all_clients = [primary_client] + self.fallback_clients
 
+    async def generate(self, prompt: str, **kwargs: Any) -> str:
+        """Generate text response from LLM.
+
+        Args:
+            prompt: Input prompt for the LLM
+            **kwargs: Additional parameters for generation
+
+        Returns:
+            Generated text response
+
+        Raises:
+            LLMError: When generation fails
+        """
+        from ..clients.base_client import LLMRequest
+
+        # Prepare LLM request
+        llm_request = LLMRequest(
+            prompt=prompt,
+            temperature=kwargs.get("temperature", 0.7),
+            max_tokens=kwargs.get("max_tokens", 1000),
+            context=kwargs.get("context"),
+        )
+
+        # Try primary client first, then fallbacks
+        last_error = None
+        for client in self._all_clients:
+            try:
+                response = await client.generate_text(llm_request)
+                return response.content
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Generation failed with {client.name}: {e}")
+
+        # All clients failed
+        from src.incident_extractor.domain.repositories.llm_repository import LLMError
+
+        raise LLMError(f"All LLM clients failed. Last error: {str(last_error)}")
+
+    async def is_available(self) -> bool:
+        """Check if the LLM service is available.
+
+        Returns:
+            True if service is available, False otherwise
+        """
+        try:
+            return await self.primary_client.health_check()
+        except Exception:
+            return False
+
+    async def get_model_info(self) -> dict[str, Any]:
+        """Get information about the current model.
+
+        Returns:
+            Dictionary containing model information
+        """
+        return {
+            "primary_client": self.primary_client.name,
+            "supported_models": self.primary_client.get_supported_models(),
+            "fallback_clients": [client.name for client in self.fallback_clients],
+        }
+
+    async def extract_incident_data(
+        self, text: str, extraction_type: str = "basic", context: dict[str, Any] | None = None
+    ) -> IncidentExtractionResult:
+        """Extract incident data from text using LLM.
+
+        Args:
+            text: Input text to extract from
+            extraction_type: Type of extraction (basic, detailed, etc.)
+            context: Additional context for extraction
+
+        Returns:
+            Extraction result with incident data
+
+        Raises:
+            Exception: If all LLM clients fail
+        """
+        # Build extraction prompt
+        prompt = self._build_extraction_prompt(text, extraction_type)
+
+        # Prepare LLM request
+        llm_request = LLMRequest(
+            prompt=prompt,
+            temperature=0.3,  # Lower temperature for more consistent extraction
+            max_tokens=2000,
+            context=context,
+        )
+
+        # Try primary client first, then fallbacks
+        last_error = None
+        for i, client in enumerate(self._all_clients):
+            try:
+                logger.info(f"Attempting extraction with {client.name} (attempt {i + 1}/{len(self._all_clients)})")
+
+                response = await client.generate_text(llm_request)
+
+                # Parse and validate response
+                result = self._parse_extraction_response(response.content, response)
+
+                logger.info(f"Extraction successful with {client.name}")
+                return result
+
+            except Exception as e:
+                last_error = e
+                logger.warning(f"Extraction failed with {client.name}: {e}")
+
+                # If this was the last client, re-raise the error
+                if i == len(self._all_clients) - 1:
+                    break
+
+        # All clients failed
+        logger.error(f"All LLM clients failed. Last error: {last_error}")
+
+        return IncidentExtractionResult(
+            success=False,
+            incident_data=None,
+            confidence_score=0.0,
+            extraction_time_ms=0,
+            errors=[f"All LLM clients failed. Last error: {str(last_error)}"],
+            provider_used=self.primary_client.name,
+            raw_response=None,
+        )
+
     async def extract_incident_data(
         self, text: str, extraction_type: str = "basic", context: dict[str, Any] | None = None
     ) -> IncidentExtractionResult:
@@ -149,12 +272,11 @@ ANÁLISE DETALHADA SOLICITADA:
         Returns:
             Parsed extraction result
         """
+        import json
+        import re
+
         try:
             # Try to extract JSON from response
-            import json
-            import re
-
-            # Find JSON in response (handle cases where LLM adds extra text)
             json_match = re.search(r"\{.*\}", content, re.DOTALL)
             if json_match:
                 json_str = json_match.group(0)
@@ -266,7 +388,7 @@ ANÁLISE DETALHADA SOLICITADA:
         Returns:
             Health status for each client
         """
-        results = {}
+        results: dict[str, bool] = {}
         for client in self._all_clients:
             try:
                 results[client.name] = await client.health_check()
@@ -275,37 +397,11 @@ ANÁLISE DETALHADA SOLICITADA:
 
         return results
 
-    def get_client_status(self) -> dict[str, Any]:
-        """Get status information for all clients.
-
-        Returns:
-            Status information for each client
-        """
-        status = {
-            "primary_client": self.primary_client.name,
-            "fallback_clients": [client.name for client in self.fallback_clients],
-            "clients": {},
-        }
-
-        for client in self._all_clients:
-            client_status = {
-                "name": client.name,
-                "supported_models": client.get_supported_models(),
-            }
-
-            # Add circuit breaker status if available
-            if hasattr(client, "get_circuit_breaker_status"):
-                client_status["circuit_breaker"] = client.get_circuit_breaker_status()
-
-            status["clients"][client.name] = client_status
-
-        return status
-
     async def close(self) -> None:
         """Close all client connections."""
         for client in self._all_clients:
-            if hasattr(client, "close"):
-                try:
-                    await client.close()
-                except Exception as e:
-                    logger.warning(f"Error closing client {client.name}: {e}")
+            try:
+                if hasattr(client, "close"):
+                    await client.close()  # type: ignore
+            except Exception as e:
+                logger.warning(f"Error closing client {client.name}: {e}")

@@ -8,7 +8,7 @@ from .dtos.incident_dtos import (
     IncidentValidationResult,
     ProcessingMetadata,
 )
-from .interfaces.incident_extraction_service import IncidentExtractionServiceInterface
+from .interfaces.incident_service_interface import IncidentExtractionServiceInterface
 from .use_cases.extract_incident_use_case import ExtractIncidentUseCase
 
 __all__ = [

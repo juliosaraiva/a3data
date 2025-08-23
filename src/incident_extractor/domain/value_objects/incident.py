@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
@@ -45,31 +46,86 @@ class IncidentDateTime:
         br_tz = pytz.timezone("America/Sao_Paulo")
         now = datetime.now(br_tz)
 
-        # Handle relative date expressions
-        relative_dates = {
-            "hoje": 0,
-            "ontem": -1,
-            "anteontem": -2,
-            "segunda passada": -7,  # Approximate
-            "semana passada": -7,
-            "mês passado": -30,
-        }
-
-        date_str_lower = date_str.lower()
-        for relative, days_offset in relative_dates.items():
-            if relative in date_str_lower:
-                target_date = now + timedelta(days=days_offset)
-                return cls(dt=target_date)
+        # Try relative date parsing first
+        relative_result = cls._parse_relative_date(date_str, now)
+        if relative_result:
+            return relative_result
 
         # Handle time-only expressions (assume today)
         if ":" in date_str and "/" not in date_str:
-            try:
-                time_part = date_str.strip()
-                hour, minute = map(int, time_part.split(":"))
-                target_date = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            return cls._parse_time_only(date_str, now)
+
+        # Handle Brazilian date formats with Babel and DD/MM/YYYY
+        return cls._parse_absolute_date(date_str, br_tz)
+
+    @classmethod
+    def _parse_relative_date(cls, date_str: str, now: datetime) -> IncidentDateTime | None:
+        """Parse relative date expressions in Brazilian Portuguese."""
+        # Comprehensive relative date expressions
+        relative_dates = {
+            # Basic relative dates
+            "hoje": 0,
+            "ontem": -1,
+            "anteontem": -2,
+            # Weekdays (approximate)
+            "segunda passada": -7,
+            "terça passada": -6,
+            "quarta passada": -5,
+            "quinta passada": -4,
+            "sexta passada": -3,
+            "sábado passado": -2,
+            "domingo passado": -1,
+            # Weekly/monthly
+            "semana passada": -7,
+            "mês passado": -30,
+            # Time-based
+            "1 dia atrás": -1,
+            "2 dias atrás": -2,
+            "alguns dias atrás": -3,
+            # Time periods today/yesterday
+            "hoje de manhã": 0,
+            "hoje à tarde": 0,
+            "ontem de manhã": -1,
+            "ontem à tarde": -1,
+        }
+
+        date_str_lower = date_str.lower()
+
+        # Check for hour-based patterns first
+        hours_match = re.search(r"(\d+)\s*horas?\s*atrás", date_str_lower)
+        if hours_match:
+            hours = int(hours_match.group(1))
+            return cls(dt=now - timedelta(hours=hours))
+
+        # Check relative dates
+        for relative, days_offset in relative_dates.items():
+            if relative in date_str_lower:
+                target_date = now + timedelta(days=days_offset)
+                # Adjust time based on period mentions
+                if "manhã" in date_str_lower:
+                    target_date = target_date.replace(hour=9, minute=0, second=0, microsecond=0)
+                elif "tarde" in date_str_lower:
+                    target_date = target_date.replace(hour=14, minute=0, second=0, microsecond=0)
+                elif "noite" in date_str_lower:
+                    target_date = target_date.replace(hour=20, minute=0, second=0, microsecond=0)
                 return cls(dt=target_date)
-            except (ValueError, IndexError):
-                pass
+
+        return None
+
+    @classmethod
+    def _parse_time_only(cls, date_str: str, now: datetime) -> IncidentDateTime | None:
+        """Parse time-only expressions assuming today."""
+        try:
+            time_part = date_str.strip()
+            hour, minute = map(int, time_part.split(":"))
+            target_date = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            return cls(dt=target_date)
+        except (ValueError, IndexError):
+            return None
+
+    @classmethod
+    def _parse_absolute_date(cls, date_str: str, br_tz) -> IncidentDateTime:
+        """Parse absolute date formats."""
 
         # Handle Brazilian date formats with Babel
         try:

@@ -8,9 +8,16 @@ from dataclasses import dataclass
 import structlog
 from slugify import slugify
 
-from ...core.exceptions import InvalidLocationError
+from incident_extractor.core.exceptions.domain import DomainError
 
 logger = structlog.get_logger(__name__)
+
+
+class InvalidLocationError(DomainError):
+    """Exception raised when location is invalid."""
+
+    def __init__(self, message: str):
+        super().__init__(message, "INVALID_LOCATION")
 
 
 @dataclass(frozen=True)
@@ -86,92 +93,67 @@ class Location:
         # Capitalize first letter of each word for better readability
         normalized = normalized.title()
 
-        # Handle common Brazilian state abbreviations
-        state_abbreviations = {
-            "Sp": "SP",
-            "São Paulo": "SP",
-            "Sao Paulo": "SP",
-            "Rj": "RJ",
+        # Handle common Brazilian state abbreviations and patterns
+        # Only match state names when they appear as standalone references or at end of location
+        state_mappings = {
+            # State full names to abbreviations (only when used as state references)
             "Rio De Janeiro": "RJ",
             "Rio de Janeiro": "RJ",
-            "Mg": "MG",
             "Minas Gerais": "MG",
-            "Rs": "RS",
             "Rio Grande Do Sul": "RS",
             "Rio Grande do Sul": "RS",
-            "Pr": "PR",
-            "Paraná": "PR",
-            "Parana": "PR",
-            "Sc": "SC",
             "Santa Catarina": "SC",
-            "Ba": "BA",
-            "Bahia": "BA",
-            "Go": "GO",
-            "Goiás": "GO",
-            "Goias": "GO",
-            "Mt": "MT",
             "Mato Grosso": "MT",
-            "Ms": "MS",
             "Mato Grosso Do Sul": "MS",
             "Mato Grosso do Sul": "MS",
-            "Es": "ES",
             "Espírito Santo": "ES",
             "Espirito Santo": "ES",
-            "Ce": "CE",
-            "Ceará": "CE",
-            "Ceara": "CE",
-            "Pe": "PE",
-            "Pernambuco": "PE",
-            "Pb": "PB",
-            "Paraíba": "PB",
-            "Paraiba": "PB",
-            "Rn": "RN",
             "Rio Grande Do Norte": "RN",
             "Rio Grande do Norte": "RN",
-            "Al": "AL",
-            "Alagoas": "AL",
-            "Se": "SE",
-            "Sergipe": "SE",
-            "Ma": "MA",
-            "Maranhão": "MA",
-            "Maranhao": "MA",
-            "Pi": "PI",
-            "Piauí": "PI",
-            "Piaui": "PI",
-            "To": "TO",
-            "Tocantins": "TO",
-            "Ro": "RO",
-            "Rondônia": "RO",
-            "Rondonia": "RO",
-            "Ac": "AC",
-            "Acre": "AC",
-            "Am": "AM",
-            "Amazonas": "AM",
-            "Rr": "RR",
-            "Roraima": "RR",
-            "Pa": "PA",
-            "Pará": "PA",
-            "Para": "PA",
-            "Ap": "AP",
-            "Amapá": "AP",
-            "Amapa": "AP",
-            "Df": "DF",
             "Distrito Federal": "DF",
-            "Brasília": "DF",
-            "Brasilia": "DF",
+            # Lowercase abbreviations to uppercase
+            "sp": "SP",
+            "rj": "RJ",
+            "mg": "MG",
+            "rs": "RS",
+            "pr": "PR",
+            "sc": "SC",
+            "ba": "BA",
+            "go": "GO",
+            "mt": "MT",
+            "ms": "MS",
+            "es": "ES",
+            "ce": "CE",
+            "pe": "PE",
+            "pb": "PB",
+            "rn": "RN",
+            "al": "AL",
+            "se": "SE",
+            "ma": "MA",
+            "pi": "PI",
+            "to": "TO",
+            "ro": "RO",
+            "ac": "AC",
+            "am": "AM",
+            "rr": "RR",
+            "pa": "PA",
+            "ap": "AP",
+            "df": "DF",
         }
 
-        # Apply state normalization
-        for variation, correct in state_abbreviations.items():
-            # Match whole words and common patterns
-            patterns = [
-                rf"\b{re.escape(variation)}\b",
-                rf", {re.escape(variation)}$",
-                rf" - {re.escape(variation)}$",
-                rf" / {re.escape(variation)}$",
-            ]
-            for pattern in patterns:
-                normalized = re.sub(pattern, f" {correct}", normalized, flags=re.IGNORECASE)
+        # Apply state normalization only in appropriate contexts
+        for state_name, abbreviation in state_mappings.items():
+            # Pattern 1: State at the end after comma (e.g., "São Paulo, SP" or "City, Rio de Janeiro")
+            pattern1 = rf",\s*{re.escape(state_name)}\s*$"
+            normalized = re.sub(pattern1, f", {abbreviation}", normalized, flags=re.IGNORECASE)
+
+            # Pattern 2: State at the end after dash (e.g., "City - SP" or "City - Rio de Janeiro")
+            pattern2 = rf"\s*-\s*{re.escape(state_name)}\s*$"
+            normalized = re.sub(pattern2, f" - {abbreviation}", normalized, flags=re.IGNORECASE)
+
+            # Pattern 3: State at the end with slash (e.g., "City / SP")
+            pattern3 = rf"\s*/\s*{re.escape(state_name)}\s*$"
+            normalized = re.sub(pattern3, f" / {abbreviation}", normalized, flags=re.IGNORECASE)
 
         # Normalize common location terms
         location_terms = {
@@ -366,10 +348,10 @@ class Location:
     def to_dict(self) -> dict[str, str | None]:
         """Convert location to dictionary representation for serialization."""
         return {
-            "raw": self.raw,
+            "raw": self.value,
             "normalized": self.normalized,
             "city": self.city,
             "state": self.state,
-            "url_slug": self.url_slug,
+            "url_slug": self.to_slug(),
             "display_format": self.to_display_format(),
         }

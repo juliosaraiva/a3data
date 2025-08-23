@@ -1,7 +1,8 @@
 """Error handler middleware for global exception handling."""
 
 import traceback
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from fastapi import HTTPException, Request, Response
 from fastapi.encoders import jsonable_encoder

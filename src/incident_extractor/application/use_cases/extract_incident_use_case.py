@@ -9,19 +9,7 @@ from typing import Any
 
 import structlog
 
-from ...core.exceptions import ApplicationError
-from ...domain.entities.incident import Incident
-from ...domain.events.incident_events import (
-    IncidentEnriched,
-    IncidentExtracted,
-    IncidentProcessingFailed,
-    IncidentValidated,
-)
-from ...domain.repositories.llm_repository import LLMRepository
-from ...domain.services.incident_enrichment_service import IncidentEnrichmentService
-from ...domain.services.incident_extraction_service import IncidentExtractionService
-from ...domain.services.incident_validation_service import IncidentValidationService
-from ..dtos.incident_dtos import (
+from incident_extractor.application.dtos.incident_dtos import (
     ExtractIncidentRequest,
     ExtractIncidentResponse,
     IncidentEnrichmentResult,
@@ -29,6 +17,19 @@ from ..dtos.incident_dtos import (
     IncidentValidationResult,
     ProcessingMetadata,
 )
+from incident_extractor.core.exceptions import ApplicationError
+from incident_extractor.domain.entities.incident import Incident
+from incident_extractor.domain.events.incident_events import (
+    IncidentEnriched,
+    IncidentExtracted,
+    IncidentProcessingFailed,
+    IncidentValidated,
+)
+from incident_extractor.domain.repositories.llm_repository import LLMRepository
+from incident_extractor.domain.services.incident_enrichment_service import IncidentEnrichmentService
+from incident_extractor.domain.services.incident_extraction_service import IncidentExtractionService
+from incident_extractor.domain.services.incident_validation_service import IncidentValidationService
+
 from ..interfaces.incident_service_interface import IncidentExtractionServiceInterface
 
 logger = structlog.get_logger(__name__)
