@@ -19,11 +19,17 @@ class IncidentDateTime:
     """Value object representing incident date and time with Brazilian locale support."""
 
     dt: datetime
+    original_text: str | None = None
+    confidence: float = 1.0
+    is_relative: bool = False
 
     def __post_init__(self) -> None:
         """Validate the datetime is timezone-aware."""
         if self.dt.tzinfo is None:
             raise ValueError("IncidentDateTime must be timezone-aware")
+
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("Confidence must be between 0.0 and 1.0")
 
     @classmethod
     def now(cls) -> IncidentDateTime:
@@ -49,14 +55,17 @@ class IncidentDateTime:
         # Try relative date parsing first
         relative_result = cls._parse_relative_date(date_str, now)
         if relative_result:
-            return relative_result
+            return cls(dt=relative_result.dt, original_text=date_str, confidence=0.8, is_relative=True)
 
         # Handle time-only expressions (assume today)
         if ":" in date_str and "/" not in date_str:
-            return cls._parse_time_only(date_str, now)
+            time_result = cls._parse_time_only(date_str, now)
+            if time_result:
+                return cls(dt=time_result.dt, original_text=date_str, confidence=0.7, is_relative=True)
 
         # Handle Brazilian date formats with Babel and DD/MM/YYYY
-        return cls._parse_absolute_date(date_str, br_tz)
+        absolute_result = cls._parse_absolute_date(date_str, br_tz)
+        return cls(dt=absolute_result.dt, original_text=date_str, confidence=0.9, is_relative=False)
 
     @classmethod
     def _parse_relative_date(cls, date_str: str, now: datetime) -> IncidentDateTime | None:
@@ -124,7 +133,7 @@ class IncidentDateTime:
             return None
 
     @classmethod
-    def _parse_absolute_date(cls, date_str: str, br_tz) -> IncidentDateTime:
+    def _parse_absolute_date(cls, date_str: str, br_tz: pytz.BaseTzInfo) -> IncidentDateTime:
         """Parse absolute date formats."""
 
         # Handle Brazilian date formats with Babel

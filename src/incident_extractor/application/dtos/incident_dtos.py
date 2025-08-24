@@ -10,17 +10,18 @@ from pydantic import BaseModel, Field, field_validator
 from ...domain.entities.incident import Incident
 
 
+def _datetime_encoder(dt: datetime) -> str:
+    """Encode datetime objects to ISO format string."""
+    return dt.isoformat()
+
+
 class ExtractIncidentRequest(BaseModel):
     """Request DTO for incident extraction."""
 
     text: str = Field(..., min_length=10, max_length=50000, description="Raw text to extract incident information from")
-
     context: dict[str, Any] | None = Field(default=None, description="Additional context information for extraction")
-
     extraction_mode: str = Field(default="comprehensive", description="Extraction mode: 'comprehensive', 'quick', or 'detailed'")
-
     validation_level: str = Field(default="standard", description="Validation level: 'minimal', 'standard', or 'strict'")
-
     enrich_data: bool = Field(default=True, description="Whether to enrich extracted data with additional context")
 
     @field_validator("extraction_mode")
@@ -82,26 +83,19 @@ class ProcessingMetadata(BaseModel):
     class Config:
         """Pydantic configuration."""
 
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders = {datetime: _datetime_encoder}
 
 
 class ExtractIncidentResponse(BaseModel):
     """Response DTO for incident extraction."""
 
     success: bool = Field(..., description="Overall success of the operation")
-
     incident: dict[str, Any] | None = Field(default=None, description="Extracted incident data in serialized format")
-
     extraction_result: IncidentExtractionResult = Field(..., description="Detailed extraction results")
-
     validation_result: IncidentValidationResult = Field(..., description="Validation results")
-
     enrichment_result: IncidentEnrichmentResult | None = Field(default=None, description="Enrichment results (if requested)")
-
     metadata: ProcessingMetadata = Field(..., description="Processing metadata")
-
     errors: list[str] = Field(default_factory=list, description="List of overall processing errors")
-
     warnings: list[str] = Field(default_factory=list, description="List of processing warnings")
 
     @staticmethod
@@ -115,31 +109,30 @@ class ExtractIncidentResponse(BaseModel):
         warnings: list[str] | None = None,
     ) -> ExtractIncidentResponse:
         """Create response from domain incident."""
-        # Serialize incident to dict
-        incident_dict = {
-            "id": str(incident.id),
-            "title": incident.title,
-            "description": incident.description,
-            "severity": incident.severity.value,
-            "incident_type": incident.incident_type.value,
-            "datetime": {
-                "value": incident.datetime.value.isoformat() if incident.datetime.value else None,
-                "original_text": incident.datetime.original_text,
-                "confidence": incident.datetime.confidence,
-                "is_relative": incident.datetime.is_relative,
-            },
-            "location": {
-                "address": incident.location.address,
-                "city": incident.location.city,
-                "state": incident.location.state,
-                "coordinates": incident.location.coordinates,
-                "confidence": incident.location.confidence,
-            },
-            "involved_parties": [party.name for party in incident.involved_parties],
-            "extracted_metadata": incident.extracted_metadata,
-            "confidence_score": incident.confidence_score,
-            "created_at": incident.created_at.isoformat(),
-            "updated_at": incident.updated_at.isoformat() if incident.updated_at else None,
+        # Serialize incident to dict using the domain Incident fields available
+        incident_dict: dict[str, Any] = {
+            "raw_description": incident.raw_description,
+            "data_ocorrencia": {
+                "value": incident.data_ocorrencia.dt.isoformat()
+                if (incident.data_ocorrencia and getattr(incident.data_ocorrencia, "dt", None))
+                else None,
+                "original_text": incident.data_ocorrencia.original_text if incident.data_ocorrencia else None,
+                "confidence": incident.data_ocorrencia.confidence if incident.data_ocorrencia else None,
+                "is_relative": incident.data_ocorrencia.is_relative if incident.data_ocorrencia else None,
+            }
+            if incident.data_ocorrencia
+            else None,
+            "local": {
+                "address": incident.local.value if incident.local else None,
+                "city": incident.local.city if incident.local else None,
+                "state": incident.local.state if incident.local else None,
+                "coordinates": incident.local.coordinates if incident.local else None,
+                "confidence": incident.local.confidence if incident.local else None,
+            }
+            if incident.local
+            else None,
+            "tipo_incidente": incident.tipo_incidente,
+            "impacto": incident.impacto,
         }
 
         return ExtractIncidentResponse(
@@ -190,4 +183,4 @@ class ExtractIncidentResponse(BaseModel):
     class Config:
         """Pydantic configuration."""
 
-        json_encoders = {datetime: lambda v: v.isoformat()}
+        json_encoders = {datetime: _datetime_encoder}

@@ -6,10 +6,11 @@ the dependencies across different layers of the application.
 
 from dependency_injector import containers, providers
 
-from ..infrastructure.health.health_checker import HealthChecker
-from ..infrastructure.logging.structured_logger import LoggerConfig, LogLevel, StructuredLogger
-from ..infrastructure.monitoring.metrics_collector import MetricsCollector, MetricsConfig
-from ..infrastructure.preprocessing.text_processor import TextProcessor, TextProcessorConfig
+from incident_extractor.infrastructure.health.health_checker import HealthChecker
+from incident_extractor.infrastructure.logging.structured_logger import LoggerConfig, LogLevel, StructuredLogger
+from incident_extractor.infrastructure.monitoring.metrics_collector import MetricsCollector, MetricsConfig
+from incident_extractor.infrastructure.preprocessing.text_processor import TextProcessor, TextProcessorConfig
+
 from .config import Config
 
 # TODO: Import these when modules are implemented
