@@ -1,215 +1,150 @@
-.PHONY: help install dev clean test lint format type-check security audit run docs docker-build docker-run
+.PHONY: help setup dev install run run-prod test format lint lint-fix type-check quality clean reset health check-deps check-env check-llm ollama-install ollama-start ollama-pull ollama-setup switch-to-openai switch-to-ollama logs
 .DEFAULT_GOAL := help
 
-# Colors for output
-RED := \033[0;31m
-GREEN := \033[0;32m
-YELLOW := \033[1;33m
-BLUE := \033[0;34m
-NC := \033[0m # No Color
-
-# Project configuration
 PROJECT_NAME := incident-extractor
-PYTHON_VERSION := 3.13
-PORT := 8000
-HOST := 0.0.0.0
+PORT ?= 8000
+HOST ?= 0.0.0.0
+PYTHON ?= python3
+OLLAMA_DEFAULT_MODEL := gemma3:4b
 
-help: ## Show this help message
-	@echo "$(BLUE)$(PROJECT_NAME) Development Commands$(NC)"
-	@echo ""
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "$(GREEN)%-20s$(NC) %s\\n", $$1, $$2}'
+# Internal helpers
+ENV_FILE := .env
 
-# =============================================================================
-# INSTALLATION & SETUP
-# =============================================================================
+help: ## Show available commands
+	@echo "\n$(PROJECT_NAME) - Make Commands"
+	@echo "--------------------------------"
+	@grep -E '^[a-zA-Z0-9_.-]+:.*?## ' $(MAKEFILE_LIST) | sed 's/:.*## /\t - /'
+	@echo "\nShortcuts: s=setup f=format l=lint-fix q=quality t=test h=health"
 
-install: ## Install production dependencies
-	@echo "$(YELLOW)Installing production dependencies...$(NC)"
+setup: ## One-command project setup (env + deps + ollama + health)
+	@[ -f $(ENV_FILE) ] || cp .env.example $(ENV_FILE)
+	@echo "[1/4] Syncing development dependencies"; uv sync --dev >/dev/null
+	@echo "[2/4] Ensuring LLM provider readiness"; $(MAKE) ollama-setup >/dev/null || true
+	@echo "[3/4] Running health checks"; $(MAKE) health
+	@echo "[4/4] Done. Run 'make run' to start the server."
+
+install: ## Install production dependencies only
 	uv sync --no-dev
-	@echo "$(GREEN)✓ Production dependencies installed$(NC)"
 
-dev: ## Install development dependencies and setup pre-commit hooks
-	@echo "$(YELLOW)Setting up development environment...$(NC)"
+dev: ## Install / update development dependencies
 	uv sync --dev
-	@echo "$(GREEN)✓ Development environment ready$(NC)"
 
-clean: ## Clean up cache files and temporary directories
-	@echo "$(YELLOW)Cleaning cache files...$(NC)"
-	find . -type f -name "*.pyc" -delete 2>/dev/null || true
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	rm -rf .pytest_cache .pyright_cache .ruff_cache
-	rm -rf htmlcov/ .coverage coverage.xml
-	rm -rf build/ dist/ *.egg-info/
-	@echo "$(GREEN)✓ Cache cleaned$(NC)"
-
-# =============================================================================
-# CODE QUALITY
-# =============================================================================
-
-format: ## Format code with ruff
-	@echo "$(YELLOW)Formatting code...$(NC)"
-	uv run ruff format .
-	@echo "$(GREEN)✓ Code formatted$(NC)"
-
-lint: ## Run linting with ruff
-	@echo "$(YELLOW)Running linter...$(NC)"
-	uv run ruff check .
-	@echo "$(GREEN)✓ Linting complete$(NC)"
-
-lint-fix: ## Run linting with auto-fix
-	@echo "$(YELLOW)Running linter with auto-fix...$(NC)"
-	uv run ruff check . --fix
-	@echo "$(GREEN)✓ Linting complete with fixes applied$(NC)"
-
-type-check: ## Run type checking with pyright
-	@echo "$(YELLOW)Running type checker...$(NC)"
-	uv run pyright .
-	@echo "$(GREEN)✓ Type checking complete$(NC)"
-
-security: ## Run security audit
-	@echo "$(YELLOW)Running security audit...$(NC)"
-	uv audit
-	@echo "$(GREEN)✓ Security audit complete$(NC)"
-
-audit: security ## Alias for security
-
-quality: format lint-fix type-check ## Run all code quality checks
-	@echo "$(GREEN)✓ All quality checks complete$(NC)"
-
-pre-commit: quality test ## Run pre-commit checks (format, lint, type-check, test)
-	@echo "$(GREEN)✓ Pre-commit checks complete - ready to commit!$(NC)"
-
-# =============================================================================
-# TESTING
-# =============================================================================
-
-test: ## Run tests with pytest
-	@echo "$(YELLOW)Running tests...$(NC)"
-	uv run pytest
-	@echo "$(GREEN)✓ Tests complete$(NC)"
-
-test-verbose: ## Run tests with verbose output
-	@echo "$(YELLOW)Running tests (verbose)...$(NC)"
-	uv run pytest -v
-
-test-coverage: ## Run tests with coverage report
-	@echo "$(YELLOW)Running tests with coverage...$(NC)"
-	uv run pytest --cov=src --cov-report=html --cov-report=term
-	@echo "$(GREEN)✓ Tests with coverage complete$(NC)"
-	@echo "$(BLUE)Coverage report: htmlcov/index.html$(NC)"
-
-test-watch: ## Run tests in watch mode
-	@echo "$(YELLOW)Running tests in watch mode...$(NC)"
-	uv run pytest --watch
-
-# =============================================================================
-# DEVELOPMENT SERVER
-# =============================================================================
-
-run: ## Start FastAPI development server
-	@echo "$(YELLOW)Starting development server...$(NC)"
-	@echo "$(BLUE)Server will be available at http://$(HOST):$(PORT)$(NC)"
-	@echo "$(BLUE)API docs at http://$(HOST):$(PORT)/docs$(NC)"
-	uv run uvicorn main:app --reload --host $(HOST) --port $(PORT)
+run: ## Start FastAPI dev server (reload)
+	PYTHONPATH=src uv run uvicorn main:app --reload --host $(HOST) --port $(PORT)
 
 run-prod: ## Start FastAPI production server
-	@echo "$(YELLOW)Starting production server...$(NC)"
-	uv run uvicorn main:app --host $(HOST) --port $(PORT)
+	PYTHONPATH=src uv run uvicorn main:app --host $(HOST) --port $(PORT)
 
-run-debug: ## Start server with debug logging
-	@echo "$(YELLOW)Starting server with debug logging...$(NC)"
-	LOG_LEVEL=DEBUG uv run uvicorn main:app --reload --host $(HOST) --port $(PORT) --log-level debug
+test: ## Run tests
+	uv run pytest
 
-# =============================================================================
-# DOCKER
-# =============================================================================
+format: ## Format code
+	uv run ruff format .
 
-docker-build: ## Build Docker image
-	@echo "$(YELLOW)Building Docker image...$(NC)"
-	docker build -t $(PROJECT_NAME):latest .
-	@echo "$(GREEN)✓ Docker image built$(NC)"
+lint: ## Lint (no fix)
+	uv run ruff check .
 
-docker-run: ## Run Docker container
-	@echo "$(YELLOW)Running Docker container...$(NC)"
-	docker run --rm -p $(PORT):$(PORT) --env-file .env $(PROJECT_NAME):latest
+lint-fix: ## Lint and auto-fix
+	uv run ruff check . --fix
 
-docker-shell: ## Open shell in Docker container
-	@echo "$(YELLOW)Opening shell in Docker container...$(NC)"
-	docker run --rm -it --env-file .env $(PROJECT_NAME):latest /bin/bash
+type-check: ## Run pyright type checker
+	uv run pyright .
 
-# =============================================================================
-# DOCUMENTATION
-# =============================================================================
+quality: ## Format + lint-fix + type-check + tests
+	$(MAKE) format
+	$(MAKE) lint-fix
+	$(MAKE) type-check
+	$(MAKE) test
 
-docs: ## Generate project documentation
-	@echo "$(YELLOW)Generating documentation...$(NC)"
-	@echo "$(BLUE)Architecture: ARCHITECTURE.md$(NC)"
-	@echo "$(BLUE)README: README.md$(NC)"
-	@echo "$(GREEN)✓ Documentation available$(NC)"
+clean: ## Remove caches and build artifacts
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	rm -rf .pytest_cache .pyright_cache .ruff_cache htmlcov .coverage coverage.xml
 
-docs-serve: ## Serve documentation locally (if using MkDocs)
-	@echo "$(YELLOW)Serving documentation...$(NC)"
-	@echo "$(BLUE)Documentation will be available at http://localhost:8080$(NC)"
-	# mkdocs serve --dev-addr localhost:8080
-
-# =============================================================================
-# UTILITIES
-# =============================================================================
-
-info: ## Show project information
-	@echo "$(BLUE)Project Information$(NC)"
-	@echo "Name: $(PROJECT_NAME)"
-	@echo "Python Version: $(PYTHON_VERSION)"
-	@echo "Port: $(PORT)"
-	@echo "Host: $(HOST)"
-	@echo ""
-	@echo "$(BLUE)Dependencies$(NC)"
-	uv tree
-
-env: ## Show environment information
-	@echo "$(BLUE)Environment Information$(NC)"
-	uv python list
-	@echo ""
-	@echo "$(BLUE)UV Version$(NC)"
-	uv version
-
-outdated: ## Check for outdated dependencies
-	@echo "$(YELLOW)Checking for outdated dependencies...$(NC)"
-	uv tree --outdated
-
-update: ## Update dependencies
-	@echo "$(YELLOW)Updating dependencies...$(NC)"
-	uv sync --upgrade
-	@echo "$(GREEN)✓ Dependencies updated$(NC)"
-
-# =============================================================================
-# DEPLOYMENT
-# =============================================================================
-
-build: quality test ## Build for production (run quality checks and tests)
-	@echo "$(GREEN)✓ Build complete - ready for deployment$(NC)"
-
-deploy-check: build ## Check if ready for deployment
-	@echo "$(YELLOW)Running deployment checks...$(NC)"
-	@echo "$(GREEN)✓ Ready for deployment$(NC)"
-
-# =============================================================================
-# MAINTENANCE
-# =============================================================================
-
-reset: clean ## Reset development environment
-	@echo "$(YELLOW)Resetting development environment...$(NC)"
+reset: ## Clean and reinstall dev environment
+	$(MAKE) clean
 	rm -rf .venv
-	uv sync --dev
-	@echo "$(GREEN)✓ Development environment reset$(NC)"
+	$(MAKE) dev
 
-backup: ## Create backup of important files
-	@echo "$(YELLOW)Creating backup...$(NC)"
-	mkdir -p backups
-	tar -czf backups/project-backup-$$(date +%Y%m%d-%H%M%S).tar.gz \
-		--exclude='.venv' \
-		--exclude='__pycache__' \
-		--exclude='.git' \
-		--exclude='backups' \
-		.
-	@echo "$(GREEN)✓ Backup created in backups/$(NC)"
+health: ## Run dependency, env, and LLM checks
+	$(MAKE) check-deps
+	$(MAKE) check-env
+	$(MAKE) check-llm
+
+check-deps: ## Verify core tooling availability
+	@echo "Tooling:"; \
+	command -v uv >/dev/null && echo "  uv: OK" || echo "  uv: MISSING"; \
+	command -v ollama >/dev/null && echo "  ollama: present" || echo "  ollama: not installed (optional)"; \
+	[ -d .venv ] && echo "  venv: OK" || echo "  venv: missing (run make dev)"; \
+	$(PYTHON) --version 2>&1 | sed 's/^/  python: /'
+
+check-env: ## Validate .env presence and basic vars
+	@if [ ! -f $(ENV_FILE) ]; then echo "  .env missing (cp .env.example .env)"; exit 1; fi; \
+	echo "Environment:"; \
+	grep -E '^LLM_PROVIDER=' $(ENV_FILE) | sed 's/^/  /' || true; \
+	grep -E '^LLM_MODEL_NAME=' $(ENV_FILE) | sed 's/^/  /' || true
+
+check-llm: ## Quick LLM provider health check
+	@if [ ! -f $(ENV_FILE) ]; then echo "Skip LLM check (no .env)"; exit 0; fi; \
+	PROV=$$(grep LLM_PROVIDER $(ENV_FILE) | cut -d'=' -f2 | tr -d '"'); \
+	if [ "$$PROV" = "ollama" ]; then \
+		command -v ollama >/dev/null || { echo "  Ollama not installed"; exit 1; }; \
+		ollama list >/dev/null 2>&1 && echo "  Ollama reachable" || echo "  Ollama not responding"; \
+	else \
+		echo "  Provider $$PROV configured (no local check)"; \
+	fi
+
+# ------------------------- Ollama Management -------------------------
+ollama-install: ## Install Ollama locally (macOS/Linux)
+	@if command -v ollama >/dev/null; then echo "Ollama already installed"; exit 0; fi; \
+	UNAME=$$(uname -s); \
+	if [ "$$UNAME" = "Darwin" ]; then \
+		command -v brew >/dev/null && brew install ollama || { echo "Homebrew required"; exit 1; }; \
+	else \
+		curl -fsSL https://ollama.com/install.sh | sh; \
+	fi
+
+ollama-start: ## Start Ollama daemon if not running
+	@pgrep -f "ollama serve" >/dev/null || (nohup ollama serve >/dev/null 2>&1 & sleep 2)
+	@echo "Ollama running"
+
+ollama-pull: ## Pull configured or default model
+	@MODEL=$$(grep -E '^LLM_MODEL_NAME=' $(ENV_FILE) | cut -d'=' -f2 | tr -d '"'); \
+	[ -n "$$MODEL" ] || MODEL=$(OLLAMA_DEFAULT_MODEL); \
+	echo "Pulling $$MODEL"; \
+	ollama pull "$$MODEL" || true
+
+ollama-setup: ## Ensure Ollama installed, started, and model pulled (if provider=ollama)
+	@if [ -f $(ENV_FILE) ] && grep -q 'LLM_PROVIDER="ollama"' $(ENV_FILE); then \
+		$(MAKE) ollama-install; \
+		$(MAKE) ollama-start; \
+		$(MAKE) ollama-pull; \
+	else \
+		echo "Provider not ollama; skipping local setup"; \
+	fi
+
+switch-to-openai: ## Switch .env to OpenAI (prompts for key)
+	@if [ ! -f $(ENV_FILE) ]; then echo ".env missing"; exit 1; fi; \
+	read -p "OpenAI API Key: " KEY; \
+	sed -i.bak 's/LLM_PROVIDER=".*"/LLM_PROVIDER="openai"/' $(ENV_FILE); \
+	sed -i.bak 's/LLM_MODEL_NAME=".*"/LLM_MODEL_NAME="gpt-4o-mini"/' $(ENV_FILE); \
+	grep -q 'LLM_API_KEY=' $(ENV_FILE) && sed -i.bak "s/LLM_API_KEY=".*"/LLM_API_KEY="$$KEY"/" $(ENV_FILE) || echo "LLM_API_KEY=\"$$KEY\"" >> $(ENV_FILE); \
+	echo "Switched to OpenAI"
+
+switch-to-ollama: ## Switch .env to Ollama default model
+	@if [ ! -f $(ENV_FILE) ]; then echo ".env missing"; exit 1; fi; \
+	sed -i.bak 's/LLM_PROVIDER=".*"/LLM_PROVIDER="ollama"/' $(ENV_FILE); \
+	sed -i.bak 's/LLM_MODEL_NAME=".*"/LLM_MODEL_NAME="$(OLLAMA_DEFAULT_MODEL)"/' $(ENV_FILE); \
+	sed -i.bak 's/LLM_API_KEY=".*"/LLM_API_KEY=""/' $(ENV_FILE); \
+	echo "Switched to Ollama"
+
+logs: ## Tail application log (if exists)
+	@if [ -f logs/app.log ]; then tail -50 logs/app.log; else echo "No log file yet"; fi
+
+# Aliases
+s: setup ## Alias for setup
+f: format ## Alias for format
+l: lint-fix ## Alias for lint-fix
+q: quality ## Alias for quality
+t: test ## Alias for test
+h: health ## Alias for health

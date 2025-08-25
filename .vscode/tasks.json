@@ -5,10 +5,96 @@
     // 🚀 DEVELOPMENT SETUP
     // ========================================
     {
+      "label": "🚀 Setup Project",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "setup"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "clear": true
+      },
+      "detail": "🎯 Complete project setup (one command)",
+      "problemMatcher": []
+    },
+    {
+      "label": "🏃 Quick Start",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "quick-start"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "shared",
+        "clear": true
+      },
+      "detail": "🏃 Setup and start server immediately"
+    },
+    {
+      "label": "🦙 Setup Ollama",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "ollama-setup"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "🦙 Install and setup Ollama"
+    },
+    {
+      "label": "🏥 Health Check",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "health"
+      ],
+      "group": "test",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared"
+      },
+      "detail": "🏥 Run system health checks"
+    },
+    {
+      "label": "🎭 Demo",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "demo"
+      ],
+      "group": "build",
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated"
+      },
+      "detail": "🎭 Run interactive demo"
+    },
+    {
       "label": "Setup Development Environment",
       "type": "shell",
       "command": "uv",
-      "args": ["sync", "--dev"],
+      "args": [
+        "sync",
+        "--dev"
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -21,7 +107,6 @@
       "problemMatcher": [],
       "detail": "📦 Install all dependencies including dev dependencies"
     },
-
     // ========================================
     // 🎨 CODE QUALITY & FORMATTING
     // ========================================
@@ -29,7 +114,12 @@
       "label": "Format Code",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "ruff", "format", "."],
+      "args": [
+        "run",
+        "ruff",
+        "format",
+        "."
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -46,7 +136,12 @@
       "label": "Lint Code",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "ruff", "check", "."],
+      "args": [
+        "run",
+        "ruff",
+        "check",
+        "."
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -77,7 +172,13 @@
       "label": "Fix Linting Issues",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "ruff", "check", ".", "--fix"],
+      "args": [
+        "run",
+        "ruff",
+        "check",
+        ".",
+        "--fix"
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -94,7 +195,11 @@
       "label": "Type Check",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "mypy", "."],
+      "args": [
+        "run",
+        "mypy",
+        "."
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -120,7 +225,6 @@
       ],
       "detail": "🔬 Run type checking with mypy"
     },
-
     // ========================================
     // 🧪 TESTING
     // ========================================
@@ -128,7 +232,10 @@
       "label": "Run Tests",
       "type": "shell",
       "command": "uv",
-      "args": ["run", "pytest"],
+      "args": [
+        "run",
+        "pytest"
+      ],
       "group": "test",
       "presentation": {
         "echo": true,
@@ -174,10 +281,11 @@
       },
       "problemMatcher": [],
       "dependsOrder": "sequence",
-      "dependsOn": ["Setup Development Environment"],
+      "dependsOn": [
+        "Setup Development Environment"
+      ],
       "detail": "📊 Run tests with coverage report"
     },
-
     // ========================================
     // 🚀 SERVER MANAGEMENT
     // ========================================
@@ -237,7 +345,6 @@
       "isBackground": true,
       "detail": "🏭 Start FastAPI server in production mode"
     },
-
     // ========================================
     // 🔍 COMPREHENSIVE CHECKS
     // ========================================
@@ -282,7 +389,6 @@
       "problemMatcher": [],
       "detail": "✅ Format, fix issues, type check and test - ready for commit"
     },
-
     // ========================================
     // 🧹 MAINTENANCE
     // ========================================
@@ -306,7 +412,6 @@
       "problemMatcher": [],
       "detail": "🗑️ Clean Python cache files and directories"
     },
-
     // ========================================
     // 🔧 MYPY ERROR FIXING
     // ========================================
@@ -314,7 +419,11 @@
       "label": "Fix MyPy Errors (Preview)",
       "type": "shell",
       "command": "python",
-      "args": ["scripts/fix_mypy.py", "--dry-run", "--verbose"],
+      "args": [
+        "scripts/fix_mypy.py",
+        "--dry-run",
+        "--verbose"
+      ],
       "group": "build",
       "presentation": {
         "echo": true,
@@ -331,7 +440,10 @@
       "label": "Fix MyPy Errors",
       "type": "shell",
       "command": "python",
-      "args": ["scripts/fix_mypy.py", "--verbose"],
+      "args": [
+        "scripts/fix_mypy.py",
+        "--verbose"
+      ],
       "group": "build",
       "presentation": {
         "echo": true,

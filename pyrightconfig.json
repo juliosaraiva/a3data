@@ -1,0 +1,20 @@
+{
+  "include": ["src"],
+  "exclude": ["**/node_modules", "**/__pycache__"],
+  "ignore": ["tests"],
+  "defineConstant": {
+    "DEBUG": true
+  },
+  "stubPath": "src/stubs",
+  "reportMissingImports": true,
+  "reportMissingTypeStubs": false,
+  "pythonVersion": "3.13",
+  "pythonPlatform": "All",
+  "executionEnvironments": [
+    {
+      "root": "src",
+      "pythonVersion": "3.13",
+      "pythonPlatform": "All"
+    }
+  ]
+}

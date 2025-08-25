@@ -107,7 +107,6 @@ venv.bak/
 
 # pyright
 .pyright_cache/
-pyrightconfig.json
 
 # Pyre type checker
 .pyre/
@@ -128,7 +127,6 @@ ehthumbs.db
 Thumbs.db
 
 # IDE Files
-.vscode/
 .idea/
 *.swp
 *.swo
