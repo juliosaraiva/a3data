@@ -19,8 +19,8 @@ This is a Python 3.13+ repository using modern Python development practices. Fol
 ### Development Flow
 - Install dependencies: `uv sync`
 - Run tests: `uv run pytest`
-- Type checking: `uv run mypy .`
-- Full check: `uv run ruff check . && uv run ruff format --check . && uv run pytest && uv run mypy .`
+- Type checking: `uv run pyright .`
+- Full check: `uv run ruff check . && uv run ruff format --check . && uv run pytest && uv run pyright .`
 
 ## Code Standards
 
@@ -35,7 +35,8 @@ This is a Python 3.13+ repository using modern Python development practices. Fol
 ### Type Hints
 - Use type hints for all function parameters and return values
 - Import types from `typing` or use built-in generics (Python 3.9+)
-- Avoid using `Optional[T]`. Use `T | None` for nullable types instead.
+- BAD `variable: Optional[T]` / GOOD `variable: T | None`.
+- BAD `variable: list` / GOOD `variable: list[str]`.
 
 ### Naming Conventions
 - Functions/variables: `snake_case`

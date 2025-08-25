@@ -140,7 +140,7 @@ Relates to #456
 #### Before Creating PR
 - [ ] Run `uv run ruff format .`
 - [ ] Run `uv run ruff check . --fix`
-- [ ] Run `uv run mypy .`
+- [ ] Run `uv run pyright .`
 - [ ] Run `uv run pytest`
 - [ ] Update documentation if needed
 - [ ] Rebase on latest main branch

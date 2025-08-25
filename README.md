@@ -16,7 +16,7 @@ A production-ready, LLM-powered incident extraction API built with **Clean Archi
 - **🇧🇷 Brazilian Localization**: Optimized for Brazilian Portuguese text and date formats
 - **⚡ High Performance**: Async/await with dependency injection container
 - **🛡️ Production Ready**: Health checks, metrics, structured logging, error handling
-- **🔧 Modern Tooling**: UV package management, Ruff formatting, MyPy type checking
+- **🔧 Modern Tooling**: UV package management, Ruff formatting, Pyright type checking
 - **📊 Comprehensive Monitoring**: Multi-tier health checks with system metrics
 - **🧪 Full Test Coverage**: Unit, integration, and API tests with mocking
 - **🔄 Resilience Patterns**: Circuit breakers, retry logic, timeout handling
@@ -32,6 +32,7 @@ A production-ready, LLM-powered incident extraction API built with **Clean Archi
 ### Installation
 
 1. **Clone and setup**:
+
 ```bash
 git clone <repository-url>
 cd incident-extractor
@@ -39,12 +40,14 @@ uv sync --dev
 ```
 
 2. **Configure environment**:
+
 ```bash
 cp .env.example .env
 # Edit .env with your settings
 ```
 
 3. **Install Ollama** (optional):
+
 ```bash
 # Install Ollama
 curl -fsSL https://ollama.com/install.sh | sh
@@ -57,6 +60,7 @@ ollama pull gemma2:2b
 ### Running the Application
 
 **Start the server**:
+
 ```bash
 # Using UV (recommended)
 uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
@@ -66,8 +70,9 @@ Cmd+Shift+P → "Tasks: Run Task" → "Start FastAPI Server"
 ```
 
 **Access the API**:
+
 - 🌐 **API**: http://localhost:8000
-- 📖 **Docs**: http://localhost:8000/docs  
+- 📖 **Docs**: http://localhost:8000/docs
 - ❤️ **Health**: http://localhost:8000/health
 
 ## 🎯 API Usage
@@ -85,6 +90,7 @@ curl -X POST "http://localhost:8000/api/v1/incidents/extract" \
 ```
 
 **Response**:
+
 ```json
 {
   "incident": {
@@ -104,6 +110,7 @@ curl -X POST "http://localhost:8000/api/v1/incidents/extract" \
 ### Health Monitoring
 
 **Basic Health**: `GET /health`
+
 ```json
 {
   "status": "healthy",
@@ -113,6 +120,7 @@ curl -X POST "http://localhost:8000/api/v1/incidents/extract" \
 ```
 
 **Detailed Health**: `GET /health/detailed`
+
 ```json
 {
   "status": "healthy",
@@ -181,11 +189,11 @@ The project follows **Clean Architecture** and **Domain-Driven Design** principl
 src/incident_extractor/
 ├── domain/               # 🎯 Business Logic
 │   ├── entities/        #   Core business objects
-│   ├── value_objects/   #   Immutable business values  
+│   ├── value_objects/   #   Immutable business values
 │   ├── repositories/    #   Abstract repository interfaces
 │   ├── services/        #   Domain services
 │   └── specifications/  #   Business rules
-├── application/         # 🔄 Use Cases  
+├── application/         # 🔄 Use Cases
 │   ├── dtos/           #   Data transfer objects
 │   ├── use_cases/      #   Application business flows
 │   └── interfaces/     #   Service interfaces
@@ -217,8 +225,8 @@ uv run task "Pre-commit Check"
 
 # Individual tools
 uv run ruff format .                    # Format code
-uv run ruff check . --fix              # Lint and fix issues  
-uv run mypy .                          # Type checking
+uv run ruff check . --fix              # Lint and fix issues
+uv run pyright .                       # Type checking
 uv run pytest                         # Run tests
 ```
 
@@ -233,7 +241,7 @@ uv run pytest --cov=src --cov-report=html --cov-report=term
 
 # Specific test categories
 uv run pytest tests/unit/             # Unit tests
-uv run pytest tests/integration/      # Integration tests  
+uv run pytest tests/integration/      # Integration tests
 uv run pytest -k "test_health"        # Specific test pattern
 
 # Watch mode for development
@@ -252,17 +260,20 @@ The project includes comprehensive VS Code configuration:
 ## 🌟 Key Components
 
 ### Domain Layer
+
 - **Incident Entity**: Core business object with validation and behavior
 - **Value Objects**: Immutable objects for dates, locations, severity levels
 - **Repository Interfaces**: Abstract contracts for data access
 - **Domain Services**: Complex business logic coordination
 
-### Application Layer  
+### Application Layer
+
 - **Use Cases**: Application-specific business flows
 - **DTOs**: Clean data transfer between layers
 - **Service Interfaces**: Abstract application services
 
 ### Infrastructure Layer
+
 - **LLM Clients**: Ollama, OpenAI, and Mock implementations
 - **Factory Pattern**: Dynamic LLM provider selection
 - **Health Monitoring**: Comprehensive system health checks
@@ -270,6 +281,7 @@ The project includes comprehensive VS Code configuration:
 - **Structured Logging**: JSON-based logging with correlation IDs
 
 ### Presentation Layer
+
 - **FastAPI Application**: Modern async web framework
 - **API Versioning**: RESTful API with versioning support
 - **Middleware Stack**: Logging, error handling, CORS, metrics
@@ -278,18 +290,21 @@ The project includes comprehensive VS Code configuration:
 ## 🔄 LLM Provider Support
 
 ### Ollama (Default)
+
 ```env
 LLM_PROVIDER=ollama
-OLLAMA_URL=http://localhost:11434  
+OLLAMA_URL=http://localhost:11434
 MODEL_NAME=gemma2:2b
 ```
 
 ### Mock (Testing)
+
 ```env
 LLM_PROVIDER=mock
 ```
 
 ### OpenAI (Coming Soon)
+
 ```env
 LLM_PROVIDER=openai
 OPENAI_API_KEY=your-key
@@ -299,18 +314,21 @@ MODEL_NAME=gpt-4
 ## 📊 Monitoring & Observability
 
 ### Health Checks
+
 - **Basic**: Simple up/down status
 - **Detailed**: Component-level health with metrics
 - **Liveness**: Container orchestrator integration
 - **Readiness**: Traffic routing decisions
 
 ### Structured Logging
+
 - **JSON Format**: Machine-readable logs
 - **Correlation IDs**: Request tracing
 - **Performance Metrics**: Response times and throughput
 - **Error Tracking**: Comprehensive error information
 
 ### Metrics Collection
+
 - **Request Metrics**: Count, latency, error rates
 - **LLM Metrics**: Response times, availability, token usage
 - **System Metrics**: CPU, memory, disk usage
@@ -319,6 +337,7 @@ MODEL_NAME=gpt-4
 ## 🚀 Production Deployment
 
 ### Environment Preparation
+
 ```bash
 # Production dependencies only
 uv sync --no-dev
@@ -331,15 +350,17 @@ uv run pytest tests/performance/
 ```
 
 ### Docker Support (Coming Soon)
+
 ```dockerfile
 FROM python:3.13-slim
 # Multi-stage build with UV
 ```
 
 ### Production Checklist
+
 - [ ] Environment variables secured
 - [ ] HTTPS configured
-- [ ] Rate limiting enabled  
+- [ ] Rate limiting enabled
 - [ ] Monitoring and alerting setup
 - [ ] Log aggregation configured
 - [ ] Health checks integrated
@@ -349,6 +370,7 @@ FROM python:3.13-slim
 ## 📈 Performance
 
 ### Optimizations
+
 - **Async Architecture**: Non-blocking I/O operations
 - **Connection Pooling**: Efficient HTTP client management
 - **Dependency Injection**: Singleton pattern for expensive resources
@@ -356,6 +378,7 @@ FROM python:3.13-slim
 - **LLM Caching**: Response caching for repeated requests
 
 ### Benchmarks
+
 - **API Response Time**: < 200ms (cached)
 - **LLM Processing**: 1-3 seconds (depending on model)
 - **Throughput**: 100+ requests/second
@@ -364,6 +387,7 @@ FROM python:3.13-slim
 ## 🤝 Contributing
 
 ### Development Workflow
+
 1. **Fork** the repository
 2. **Create** feature branch: `git checkout -b feature/amazing-feature`
 3. **Develop** with tests: `uv run pytest --watch`
@@ -372,8 +396,9 @@ FROM python:3.13-slim
 6. **Push** and create pull request
 
 ### Code Style
+
 - **Python**: PEP 8 with Ruff formatting
-- **Type Hints**: Complete type coverage with MyPy
+- **Type Hints**: Complete type coverage with Pyright
 - **Documentation**: Comprehensive docstrings
 - **Testing**: High test coverage with meaningful assertions
 - **Git**: Conventional commits with clear messages
@@ -390,6 +415,7 @@ FROM python:3.13-slim
 ### Common Issues
 
 **1. Ollama Connection Failed**
+
 ```bash
 # Check Ollama status
 ollama list
@@ -400,18 +426,21 @@ ollama pull gemma2:2b
 ```
 
 **2. Import Errors**
+
 ```bash
 # Reinstall dependencies
 uv sync --reinstall
 ```
 
 **3. Test Failures**
+
 ```bash
 # Clear cache and rerun
 uv run pytest --cache-clear -v
 ```
 
 **4. Performance Issues**
+
 ```bash
 # Check system resources
 uv run python -c "import psutil; print(f'CPU: {psutil.cpu_percent()}%, Memory: {psutil.virtual_memory().percent}%')"

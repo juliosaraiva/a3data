@@ -29,7 +29,7 @@ src/incident_extractor/
 uv sync --dev
 
 # Code Quality Pipeline (Task: "Pre-commit Check")
-uv run ruff format . && uv run ruff check . --fix && uv run mypy . && uv run pytest
+uv run ruff format . && uv run ruff check . --fix && uv run pyright . && uv run pytest
 
 # Server (Task: "Start FastAPI Server")
 uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
@@ -105,7 +105,7 @@ async def is_available(self) -> bool:
 
 - **Configuration**: Always use the enhanced Settings class, never direct env access
 - **Logging**: Use `structlog.get_logger(__name__)` for structured logging
-- **Type hints**: Required for all function parameters and return values (mypy strict mode)
+- **Type hints**: Required for all function parameters and return values (pyright strict mode)
 - **Testing**: Mock LLM clients using the provided `MockClient` for predictable tests
 
 ## 🛠️ Use Tools available

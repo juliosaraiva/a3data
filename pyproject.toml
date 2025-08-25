@@ -23,6 +23,11 @@ dependencies = [
     "babel>=2.12.0",                    # Localization support for Brazilian formats
     "pytz>=2023.3",                     # Timezone handling
     "httpx>=0.27.0",                    # HTTP client for LLM API calls
+    "langchain>=0.3.27",
+    "langgraph>=0.6.6",
+    "langchain-community>=0.3.27",
+    "langchain-ollama>=0.3.7",
+    "langchain-openai>=0.3.31",
 ]
 
 [dependency-groups]
@@ -38,7 +43,7 @@ dev = [
     "faker>=24.0.0",         # Fake data generation
     "respx>=0.21.0",         # HTTP mocking
     "ruff>=0.12.9",
-    "mypy>=1.11.2",
+    "pyright>=1.1.390",
     "pre-commit>=4.0.1",
 ]
 
@@ -87,17 +92,30 @@ markers = [
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
-[tool.mypy]
-python_version = "3.13"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
-check_untyped_defs = true
-disallow_untyped_decorators = true
-no_implicit_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-warn_unreachable = true
-strict_equality = true
+[tool.pyright]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+reportUnusedImport = "error"
+reportUnusedClass = "error"
+reportUnusedFunction = "error"
+reportUnusedVariable = "error"
+reportDuplicateImport = "error"
+reportUntypedFunctionDecorator = "error"
+reportUntypedClassDecorator = "error"
+reportUntypedBaseClass = "error"
+reportUntypedNamedTuple = "error"
+reportPrivateUsage = "warning"
+reportTypeCommentUsage = "error"
+reportIncompatibleMethodOverride = "error"
+reportIncompatibleVariableOverride = "error"
+reportInconsistentConstructor = "error"
+reportOverlappingOverload = "error"
+reportMissingParameterType = "error"
+reportMissingTypeArgument = "error"
+reportInvalidTypeVarUse = "error"
+reportCallInDefaultInitializer = "error"
+reportUnnecessaryIsInstance = "error"
+reportUnnecessaryCast = "error"
+reportUnnecessaryComparison = "error"
+reportImplicitStringConcatenation = "warning"
+reportUnusedCallResult = "warning"

@@ -105,10 +105,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+# pyright
+.pyright_cache/
+pyrightconfig.json
 
 # Pyre type checker
 .pyre/

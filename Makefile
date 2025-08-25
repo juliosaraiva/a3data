@@ -35,10 +35,9 @@ dev: ## Install development dependencies and setup pre-commit hooks
 
 clean: ## Clean up cache files and temporary directories
 	@echo "$(YELLOW)Cleaning cache files...$(NC)"
-	uv run python scripts/cleanup_pycache.py --quiet
-	find . -type f -name "*.pyc" -delete
-	find . -type d -name "__pycache__" -delete
-	rm -rf .pytest_cache .mypy_cache .ruff_cache
+	find . -type f -name "*.pyc" -delete 2>/dev/null || true
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	rm -rf .pytest_cache .pyright_cache .ruff_cache
 	rm -rf htmlcov/ .coverage coverage.xml
 	rm -rf build/ dist/ *.egg-info/
 	@echo "$(GREEN)✓ Cache cleaned$(NC)"
@@ -62,9 +61,9 @@ lint-fix: ## Run linting with auto-fix
 	uv run ruff check . --fix
 	@echo "$(GREEN)✓ Linting complete with fixes applied$(NC)"
 
-type-check: ## Run type checking with mypy
+type-check: ## Run type checking with pyright
 	@echo "$(YELLOW)Running type checker...$(NC)"
-	uv run mypy .
+	uv run pyright .
 	@echo "$(GREEN)✓ Type checking complete$(NC)"
 
 security: ## Run security audit
