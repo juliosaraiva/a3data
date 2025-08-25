@@ -1,154 +1,283 @@
 # Incident Extractor API
 
-FastAPI service that extracts structured incident data (datetime, location, type, impact) from natural language text in Brazilian Portuguese using interchangeable LLM providers (local Ollama by default, OpenAI and others optionally).
+An intelligent FastAPI service that extracts structured incident information from Brazilian Portuguese incident reports using multi-agent LLM processing. Transforms unstructured text into standardized data for datetime, location, incident type, and impact assessment.
 
-## 🚀 One‑Command Setup
+## 🚀 Quick Start
 
 ```bash
+# 1. Clone and setup
 git clone https://github.com/your-org/incident-extractor.git
 cd incident-extractor
-make setup     # creates .env (if missing), installs deps, prepares Ollama (if provider=ollama), runs health checks
-make run       # start server (http://localhost:8000)
+make setup     # One-command setup: dependencies + environment + LLM
+
+# 2. Start the server
+make run       # http://localhost:8000
+
+# 3. Test the API
+curl -X POST http://localhost:8000/extract \
+  -H 'Content-Type: application/json' \
+  -d '{"text":"Ontem às 14h no escritório de São Paulo houve falha no servidor principal, impactando o sistema de faturamento por 2 horas."}'
 ```
 
 ## ✨ Key Features
 
-- Clean, layered domain-centric design
-- Multiple LLM providers (Ollama local, OpenAI, mock for tests)
-- Health & diagnostics (deps, env, LLM reachability)
-- Strict typing (Pyright) & fast lint/format (Ruff)
-- Unified quality pipeline (`make quality`)
+- **Multi-Agent Processing**: LangGraph workflow with specialized agents (Supervisor, Preprocessor, Extractor)
+- **Multiple LLM Providers**: Local Ollama, OpenAI, or Mock for testing
+- **Brazilian Portuguese**: Native support for PT-BR language and date formats
+- **Type-Safe**: Strict typing with Pydantic and Pyright
+- **Production Ready**: Health checks, metrics, structured logging
+- **Developer Friendly**: Hot reload, comprehensive testing, code quality tools
 
-## 🧪 Common Make Commands
+## 📋 System Requirements
 
-```bash
-make setup        # One-time project bootstrap
-make run          # Dev server (reload)
-make test         # Run tests
-make quality      # Format + lint-fix + type-check + tests
-make health       # Dependency, env, and LLM checks
-make switch-to-openai  # Change provider (asks API key)
-make switch-to-ollama  # Revert to local model
-```
+- **Python**: 3.13+
+- **uv**: Fast Python package manager
+- **Ollama**: For local LLM (optional, auto-installed with `make setup`)
+- **macOS/Linux**: Primary supported platforms
 
-Short aliases: `make s f l q t h`
+## ⚙️ Essential Commands
 
-## ⚙️ Configuration (.env)
+| Command        | Purpose       | Description                                            |
+| -------------- | ------------- | ------------------------------------------------------ |
+| `make setup`   | Initial setup | Install dependencies, configure environment, setup LLM |
+| `make run`     | Start server  | Development server with hot reload                     |
+| `make test`    | Run tests     | Execute test suite                                     |
+| `make quality` | Code quality  | Format, lint, type-check, and test                     |
+| `make health`  | System check  | Verify dependencies, environment, and LLM connectivity |
 
-Create from example automatically on first `make setup`.
-Important variables:
+**Quick aliases**: `s` (setup), `f` (format), `l` (lint-fix), `q` (quality), `t` (test), `h` (health)
+
+## ⚙️ Configuration
+
+Environment variables are configured automatically on first `make setup` from `.env.example`.
+
+### Core Settings
 
 ```env
 LLM_PROVIDER="ollama"          # ollama | openai | mock
-LLM_MODEL_NAME="gemma3:4b"     # overridden per provider
-LLM_BASE_URL="http://localhost:11434"  # Ollama daemon
-LOG_LEVEL="INFO"
+LLM_MODEL_NAME="gemma3:4b"     # Model name (provider-specific)
+LLM_BASE_URL="http://localhost:11434"  # Ollama daemon URL
+LLM_TIMEOUT=30                 # Request timeout (seconds)
+LOG_LEVEL="INFO"               # Logging level
+DEBUG=false                    # Debug mode
 ```
 
-For OpenAI set `LLM_PROVIDER="openai"` and run `make switch-to-openai`.
+### LLM Provider Setup
 
-## 🤖 Provider Management
+#### Ollama (Default - Local)
 
 ```bash
-make switch-to-ollama   # Sets provider + default model
-make switch-to-openai   # Prompts for API key
-make ollama-setup       # Install + start + pull model (if provider=ollama)
+make setup              # Auto-installs and configures Ollama
+# OR manually:
+make ollama-setup       # Install + start + pull model
 ```
 
-## 🔍 Health & Diagnostics
+#### OpenAI (Cloud)
 
 ```bash
-make health      # Aggregated checks
-make check-deps  # Toolchain (uv, ollama, python, venv)
-make check-env   # .env presence + key vars
-make check-llm   # Basic provider reachability
+make switch-to-openai   # Prompts for API key and switches provider
+# Manually set: LLM_PROVIDER="openai" and LLM_API_KEY="your-key"
 ```
 
-## 🧬 Development Workflow
+#### Mock (Testing)
 
 ```bash
-make f           # Format only
-make l           # Lint & fix
-make type-check  # Pyright
-make test        # Pytest
-make quality     # All of the above + tests
+# Set in .env: LLM_PROVIDER="mock"
+# No external dependencies required
 ```
 
-Helper scripts:
+## 💼 API Reference
 
-```bash
-./scripts/dev.sh test|format|fix|serve|health
-./scripts/config.sh show|validate|ollama|openai|mock
-./scripts/setup.sh   # Interactive wrapper for make setup
-```
+### Endpoints
 
-## 🏗️ Minimal Architecture Overview
+| Method | Path                   | Description                  | Response            |
+| ------ | ---------------------- | ---------------------------- | ------------------- |
+| GET    | `/`                    | Service information          | JSON                |
+| GET    | `/health`              | Component health status      | `HealthStatus`      |
+| POST   | `/extract`             | Extract incident information | `IncidentData`      |
+| GET    | `/metrics`             | Processing metrics           | `ProcessingMetrics` |
+| POST   | `/debug/workflow-info` | Workflow state (DEBUG only)  | JSON                |
 
-```
-src/
-  incident_extractor/
-    domain/       # Entities, value objects, repositories, services, specs
-    services/     # LLM service manager & orchestration
-    graph/        # Workflow / graph execution
-    models/       # Schemas & Pydantic models
-    config/       # Settings, logging, llm configuration
-```
+### Example Request/Response
 
-## 🧪 API Example
+**Request:**
 
 ```bash
 curl -X POST http://localhost:8000/extract \
   -H 'Content-Type: application/json' \
-  -d '{"text":"Ontem às 14h, no escritório de São Paulo, houve uma falha no servidor principal que afetou o sistema de faturamento por 2 horas."}'
+  -d '{
+    "text": "Hoje às 09:30 no datacenter SP-01 houve queda de energia que causou indisponibilidade dos serviços críticos por 45 minutos."
+  }'
 ```
 
-## 🛠️ Troubleshooting (Top 3)
-
-| Issue            | Fix                                                    |
-| ---------------- | ------------------------------------------------------ |
-| Ollama not found | `make ollama-install` or `make ollama-setup`           |
-| Model missing    | `make ollama-pull` (or rerun `make ollama-setup`)      |
-| Import errors    | Ensure you run from project root and used `make setup` |
-
-## 💡 Productivity Suggestions
-
-- Add pre-commit hook referencing `make quality`
-- Add test categories (unit vs integration directories)
-- Optional: integrate continuous benchmarking script
-
-## 📄 License
-
-## MIT
-
-## 🔄 Current API Endpoints
-
-| Method | Path                   | Description                                         | Response Model      |
-| ------ | ---------------------- | --------------------------------------------------- | ------------------- |
-| GET    | `/`                    | Basic service info                                  | JSON dict           |
-| GET    | `/health`              | Component health (LLMs, workflow, metrics)          | `HealthStatus`      |
-| POST   | `/extract`             | Extract incident info from Portuguese text          | `IncidentData`      |
-| GET    | `/metrics`             | Aggregated processing metrics                       | `ProcessingMetrics` |
-| POST   | `/debug/workflow-info` | Workflow + LLM service state (only if `DEBUG=true`) | JSON                |
-
-### IncidentData (POST /extract)
+**Response:**
 
 ```json
 {
-  "data_ocorrencia": "2025-08-24 14:30",
-  "local": "São Paulo",
-  "tipo_incidente": "Falha no servidor",
-  "impacto": "Sistema de faturamento indisponível por 2 horas"
+  "data_ocorrencia": "2025-01-20 09:30",
+  "local": "Datacenter SP-01",
+  "tipo_incidente": "Queda de energia",
+  "impacto": "Indisponibilidade dos serviços críticos por 45 minutos"
 }
 ```
 
-### Processing Metrics (GET /metrics)
+## 🚀 Development
 
-Core fields tracked internally (excerpt):
+### Development Workflow
 
-- `total_requests`, `successful_extractions`, `failed_extractions`
-- `average_processing_time` (seconds)
-- `supervisor_calls`, `preprocessor_calls`, `extractor_calls`
-- `validation_errors`, `timeout_errors`, `llm_errors`
+```bash
+# Setup development environment
+make dev              # Install dev dependencies
+make run              # Start dev server with reload
+
+# Code quality checks
+make format           # Format code with Ruff
+make lint-fix         # Lint and auto-fix issues
+make type-check       # Type checking with Pyright
+make quality          # Run all quality checks + tests
+```
+
+### Testing
+
+```bash
+make test             # Run full test suite
+uv run pytest tests/ # Direct pytest execution
+uv run pytest -v     # Verbose output
+```
+
+### Additional Commands
+
+```bash
+make logs             # View application logs
+make clean            # Remove cache files
+make reset            # Clean + reinstall environment
+```
+
+## 🏗️ Architecture Overview
+
+The system uses a **multi-agent approach** with LangGraph orchestration:
+
+```
+┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
+│   FastAPI       │───▶│   LangGraph      │───▶│   Multi-Agent   │
+│   REST API      │    │   Workflow       │    │   Processing    │
+└─────────────────┘    └──────────────────┘    └─────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────────────────────┐
+                    │         Agent System                  │
+                    │  ┌──────────┐ ┌─────────┐ ┌────────┐  │
+                    │  │Supervisor│ │Preproc. │ │Extract.│  │
+                    │  │  Agent   │ │ Agent   │ │ Agent  │  │
+                    │  └──────────┘ └─────────┘ └────────┘  │
+                    └───────────────────────────────────────┘
+                                │
+                                ▼
+                    ┌─────────────────────────────────┐
+                    │        LLM Services             │
+                    │   Ollama │ OpenAI │ Mock        │
+                    └─────────────────────────────────┘
+```
+
+### Project Structure
+
+```
+src/incident_extractor/
+├── agents/        # Multi-agent system (Supervisor, Preprocessor, Extractor)
+├── config/        # Settings, logging, LLM configuration
+├── graph/         # LangGraph workflow orchestration
+├── models/        # Pydantic models and schemas
+└── services/      # LLM service abstractions
+```
+
+### Processing Flow
+
+1. **Supervisor Agent**: Analyzes input and orchestrates workflow
+2. **Preprocessor Agent**: Cleans and normalizes Portuguese text
+3. **Extractor Agent**: Extracts structured data via LLM
+4. **Quality Control**: Validates results and handles retries
+
+> 📖 **Detailed Architecture**: See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for comprehensive documentation.
+
+## � Troubleshooting
+
+### Common Issues
+
+| Issue                    | Cause                      | Solution                                     |
+| ------------------------ | -------------------------- | -------------------------------------------- |
+| **Ollama not found**     | Ollama not installed       | `make ollama-setup` or `brew install ollama` |
+| **Model missing**        | Default model not pulled   | `make ollama-pull`                           |
+| **Import errors**        | Wrong working directory    | Run commands from project root               |
+| **422 validation error** | Text too short (<10 chars) | Provide more descriptive incident text       |
+| **408 timeout**          | LLM response too slow      | Increase `LLM_TIMEOUT` or reduce text length |
+| **500 internal error**   | LLM provider failure       | Check `make health` and logs                 |
+
+### Health Checks
+
+```bash
+make health       # Complete system health check
+make check-deps   # Verify tooling (uv, python, ollama)
+make check-env    # Validate .env configuration
+make check-llm    # Test LLM provider connectivity
+make logs         # View recent application logs
+```
+
+### Provider-Specific Issues
+
+**Ollama:**
+
+- Ensure Ollama daemon is running: `ollama serve`
+- Check available models: `ollama list`
+- Pull missing model: `ollama pull gemma3:4b`
+
+**OpenAI:**
+
+- Verify API key in `.env`: `LLM_API_KEY="sk-..."`
+- Check quota and billing in OpenAI dashboard
+- Test connectivity: `curl -H "Authorization: Bearer $LLM_API_KEY" https://api.openai.com/v1/models`
+
+## 🤝 Contributing
+
+### Development Setup
+
+```bash
+git clone <repository>
+cd incident-extractor
+make setup          # Full environment setup
+make dev            # Install dev dependencies
+```
+
+### Code Quality Standards
+
+- **Type Safety**: All functions must have type hints (Pyright strict mode)
+- **Testing**: Write tests for new features and bug fixes
+- **Documentation**: Update relevant documentation for changes
+- **Code Style**: Use `make quality` before committing
+
+### Commit Workflow
+
+```bash
+# Before committing
+make quality        # Format, lint, type-check, test
+git add .
+git commit -m "feat: your change description"
+```
+
+### Adding New Features
+
+1. **New Agents**: Extend the multi-agent system in `src/incident_extractor/agents/`
+2. **LLM Providers**: Add support for new providers in `src/incident_extractor/services/`
+3. **API Endpoints**: Extend FastAPI routes in `main.py`
+
+## 📜 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+**Documentation**: For detailed architecture and implementation details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
+
+**Last Updated**: Based on implementation as of 2025-01-20
 
 ## 📂 Current Folder Structure
 

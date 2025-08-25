@@ -77,11 +77,6 @@ class IncidentExtractionWorkflow:
         # From extractor, go back to supervisor for evaluation
         workflow.add_edge("extractor", "supervisor")
 
-        # From error handler, decide whether to retry or finish
-        workflow.add_conditional_edges(
-            "error_handler", self._route_from_error_handler, {"retry": "supervisor", "finish": "finalizer"}
-        )
-
         # Finalizer always ends the workflow
         workflow.add_edge("finalizer", END)
 

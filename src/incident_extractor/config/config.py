@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # LLM settings
     ollama_base_url: str = Field(default="http://localhost:11434", description="Ollama base URL")
-    ollama_model: str = Field(default="llama3.2", description="Default Ollama model")
+    ollama_model: str = Field(default="gemma3:4b", description="Default Ollama model")
     ollama_timeout: int = Field(default=60, description="Ollama request timeout in seconds")
     ollama_max_retries: int = Field(default=3, description="Maximum retries for Ollama requests")
 

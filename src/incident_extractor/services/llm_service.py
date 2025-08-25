@@ -1,7 +1,6 @@
 """LLM service abstraction layer for the incident extractor application."""
 
 import asyncio
-import json
 from abc import ABC, abstractmethod
 
 import httpx
@@ -76,8 +75,6 @@ class OllamaLLMService(BaseLLMService):
                 params = get_model_parameters(self.config)
                 self.client = OllamaLLM(
                     model=self.config.model,
-                    temperature=self.config.temperature,
-                    base_url=self.config.base_url,
                     **params,
                 )
                 self.logger.info(f"Initialized Ollama client with model {self.config.model}")
@@ -245,53 +242,6 @@ class OpenAILLMService(BaseLLMService):
             self._http_client = None
 
 
-class MockLLMService(BaseLLMService):
-    """Mock LLM service for testing."""
-
-    def __init__(self, config: LLMConfig):
-        super().__init__(config)
-
-    async def generate(self, prompt: str, system_prompt: str | None = None) -> str:
-        """Generate mock response."""
-        self.logger.info("Generating mock response")
-
-        # Simulate processing delay
-        await asyncio.sleep(0.1)
-
-        # Return mock extraction data if this looks like an extraction prompt
-        if "json" in prompt.lower() or "extraia" in prompt.lower():
-            return json.dumps(
-                {
-                    "data_ocorrencia": "2025-08-23 14:00",
-                    "local": "São Paulo",
-                    "tipo_incidente": "Falha no servidor",
-                    "impacto": "Sistema de faturamento indisponível por 2 horas",
-                },
-                ensure_ascii=False,
-                indent=2,
-            )
-
-        return "Mock response for testing purposes."
-
-    async def is_healthy(self) -> bool:
-        """Mock service is always healthy."""
-        return True
-
-    async def _get_http_client(self) -> httpx.AsyncClient:
-        """Get HTTP client for health checks."""
-        if self._http_client is None:
-            self._http_client = httpx.AsyncClient(
-                timeout=httpx.Timeout(self.config.timeout), limits=httpx.Limits(max_connections=10)
-            )
-        return self._http_client
-
-    async def close(self) -> None:
-        """Close HTTP client connections."""
-        if self._http_client:
-            await self._http_client.aclose()
-            self._http_client = None
-
-
 class LLMServiceFactory:
     """Factory for creating LLM services."""
 
@@ -302,8 +252,6 @@ class LLMServiceFactory:
             return OllamaLLMService(config)
         elif config.provider == LLMProvider.OPENAI:
             return OpenAILLMService(config)
-        elif config.provider == LLMProvider.MOCK:
-            return MockLLMService(config)
         else:
             raise ValueError(f"Unsupported LLM provider: {config.provider}")
 
@@ -382,10 +330,6 @@ async def get_llm_service_manager() -> LLMServiceManager:
 
         # Initialize services based on configuration
         settings = get_settings()
-
-        # Add mock service for testing
-        mock_config = LLMConfig(provider=LLMProvider.MOCK, model="mock")
-        _service_manager.register_service("mock", LLMServiceFactory.create_service(mock_config))
 
         # Add Ollama service if configured
         try:

@@ -14,7 +14,7 @@ class LLMProvider(str, Enum):
 
     OLLAMA = "ollama"
     OPENAI = "openai"
-    MOCK = "mock"  # For testing
+    PERPLEXITY = "sonar"
 
 
 class LLMConfig(BaseSettings):
@@ -123,16 +123,6 @@ def get_llm_config() -> AgentLLMSettings:
 def get_fallback_llm_config() -> LLMConfig:
     """Get fallback LLM configuration (OpenAI)."""
     settings = get_settings()
-
-    if not settings.openai_api_key:
-        # Return mock LLM for testing
-        return LLMConfig(
-            provider=LLMProvider.MOCK,
-            model="mock-model",
-            temperature=0.1,
-            max_tokens=1000,
-            system_prompt="Mock LLM for testing purposes.",
-        )
 
     return LLMConfig(
         provider=LLMProvider.OPENAI,
