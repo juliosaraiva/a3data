@@ -1,0 +1,124 @@
+# Supervisor Agent Configuration
+# This file contains prompts and decision criteria for the supervisor agent
+
+supervisor_config:
+  # System prompt for LLM-based decision making
+  system_prompt: |
+    Você é um supervisor inteligente de workflow de extração de incidentes.
+
+    CRITÉRIOS DE DECISÃO:
+
+    1. PREPROCESS: Use quando:
+       - Texto original existe mas não há texto pré-processado
+       - Independente de erros anteriores
+
+    2. EXTRACT: Use quando:
+       - Texto está pré-processado
+       - Não há dados extraídos ainda
+       - Tentativas < limite máximo
+
+    3. RETRY: Use quando:
+       - Há dados extraídos mas incompletos (< {max_missing_fields} campos essenciais)
+       - Erros recuperáveis presentes
+       - Tentativas < limite máximo
+       - Erros totais ≤ {max_errors}
+
+    4. FINISH: Use quando:
+       - Dados extraídos estão completos
+       - Processo bem-sucedido
+
+    5. ERROR: Use quando:
+       - Erros críticos > {max_critical_errors}
+       - Erros totais > {max_errors}
+       - Máximo de tentativas excedido
+
+    RESPONDA APENAS com uma palavra: preprocess, extract, retry, finish, ou error.
+
+  # Decision prompt template
+  decision_prompt_template: |
+    ANÁLISE DO ESTADO ATUAL:
+
+    DADOS DISPONÍVEIS:
+    - Texto original: {has_raw_text}
+    - Texto pré-processado: {has_preprocessed_text}
+    - Dados extraídos: {has_extracted_data}
+
+    MÉTRICAS:
+    - Tentativas: {current_attempts}/{max_attempts}
+    - Erros totais: {total_errors}
+    - Avisos: {total_warnings}
+    - Taxa de completude: {completion_rate}
+
+    ANÁLISE DE ERROS:
+    - Recuperáveis: {recoverable_errors}
+    - Críticos: {critical_errors}
+    - Desconhecidos: {unknown_errors}
+
+    ERROS RECENTES:
+    {recent_errors}
+
+    CAMPOS EXTRAÍDOS:
+    {extracted_fields_status}
+
+    Com base nesta análise, qual deve ser a próxima ação?
+
+  # Configuration constants
+  thresholds:
+    max_errors: 3
+    max_missing_fields: 2
+    max_critical_errors: 2
+    max_recent_errors_to_show: 3
+
+  # Error classification keywords
+  error_classification:
+    recoverable_keywords:
+      - timeout
+      - connection
+      - temporary
+      - retry
+      - network
+      - timeout_error
+    critical_keywords:
+      - validation
+      - format
+      - parsing
+      - schema
+      - invalid
+      - malformed
+
+  # Action reasoning templates
+  action_reasoning:
+    preprocess: "Texto original precisa ser pré-processado"
+    extract: "Pronto para extração de informações"
+    retry: "Tentativa {attempt_number}/{max_attempts}"
+    finish: "Processamento concluído"
+    error: "Finalizando devido a erros"
+
+  # Status messages
+  status_messages:
+    success: "Processamento concluído com sucesso"
+    partial_success: "Processamento parcialmente concluído"
+    error: "Processamento finalizado com erro"
+    unknown: "Status desconhecido"
+
+  # Recovery decision messages
+  recovery_messages:
+    retry_possible: "Retry possible with {recoverable_count} recoverable errors"
+    terminating_critical: "Terminating: {critical_count} critical errors exceed threshold"
+    terminating_total: "Terminating: total errors exceed threshold"
+    no_recovery: "No recovery possible"
+
+  # Field mapping for completion analysis
+  required_fields:
+    - data_ocorrencia
+    - local
+    - tipo_incidente
+    - impacto
+
+  # Visual indicators for status display
+  indicators:
+    present: "✓"
+    absent: "✗"
+    separator: " | "
+    none_found: "Nenhum erro encontrado"
+    none_extracted: "Nenhum campo extraído ainda"

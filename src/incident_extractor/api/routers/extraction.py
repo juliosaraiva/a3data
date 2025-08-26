@@ -17,6 +17,7 @@ import time
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel
 
 from ...config import get_logger
 from ...graph.workflow import extract_incident_info
@@ -25,12 +26,21 @@ from ..dependencies import get_request_id
 from ..responses import (
     ExtractionData,
     ExtractionException,
-    ExtractionResponse,
     TextValidationException,
     ValidationException,
     WorkflowException,
     create_success_response,
 )
+
+
+class CleanIncidentResponse(BaseModel):
+    """Clean incident response with only the four required fields."""
+
+    data_ocorrencia: str | None = None
+    local: str | None = None
+    tipo_incidente: str | None = None
+    impacto: str | None = None
+
 
 # Create router for extraction endpoints with proper prefix
 router = APIRouter(prefix="/v1/incidents", tags=["extraction"])
@@ -225,12 +235,12 @@ async def _process_batch_item(
         }
 
 
-@router.post("/extract", response_model=ExtractionResponse)
+@router.post("/extract", response_model=CleanIncidentResponse)
 async def extract_incident(
     request: ExtractionRequest,
     http_request: Request,
     request_id: str = Depends(get_request_id),
-) -> ExtractionResponse:
+) -> CleanIncidentResponse:
     """
     Extract structured incident information from text.
 
@@ -251,7 +261,6 @@ async def extract_incident(
         ValidationException: If request validation fails
     """
     start_time = time.time()
-    endpoint_path = str(http_request.url.path)
 
     logger.info(
         "Starting incident extraction",
@@ -273,13 +282,6 @@ async def extract_incident(
 
         processing_time = (time.time() - start_time) * 1000
 
-        extraction_data = ExtractionData(
-            extracted_fields=result_data["fields"],
-            confidence_scores=result_data["scores"],
-            processing_steps=["text_validation", "workflow_execution", "field_extraction"],
-            warnings=None,
-        )
-
         logger.info(
             "Incident extraction completed successfully",
             extra={
@@ -289,12 +291,12 @@ async def extract_incident(
             },
         )
 
-        return create_success_response(
-            data=extraction_data,
-            message="Extraction completed successfully",
-            request_id=request_id,
-            processing_time_ms=processing_time,
-            endpoint=endpoint_path,
+        # Return only the clean incident data without metadata
+        return CleanIncidentResponse(
+            data_ocorrencia=result_data["fields"].get("data_ocorrencia"),
+            local=result_data["fields"].get("local"),
+            tipo_incidente=result_data["fields"].get("tipo_incidente"),
+            impacto=result_data["fields"].get("impacto"),
         )
 
     except (TextValidationException, ValidationException, ExtractionException, WorkflowException):

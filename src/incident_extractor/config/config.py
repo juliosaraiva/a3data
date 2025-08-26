@@ -38,10 +38,31 @@ class Settings(BaseSettings):
     enable_metrics: bool = Field(default=True, description="Enable metrics endpoints")
 
     # LLM settings
-    ollama_base_url: str = Field(default="http://localhost:11434", description="Ollama base URL")
-    ollama_model: str = Field(default="gemma3:4b", description="Default Ollama model")
-    ollama_timeout: int = Field(default=60, description="Ollama request timeout in seconds")
-    ollama_max_retries: int = Field(default=3, description="Maximum retries for Ollama requests")
+    llm_base_url: str = Field(default="http://localhost:11434", description="Ollama base URL", alias="ollama_base_url")
+    llm_model_name: str = Field(default="gemma2:2b", description="Default Ollama model", alias="ollama_model")
+    llm_timeout: int = Field(default=60, description="Ollama request timeout in seconds", alias="ollama_timeout")
+    llm_max_retries: int = Field(default=3, description="Maximum retries for Ollama requests", alias="ollama_max_retries")
+
+    # Maintain backward compatibility
+    @computed_field
+    @property
+    def ollama_base_url(self) -> str:
+        return self.llm_base_url
+
+    @computed_field
+    @property
+    def ollama_model(self) -> str:
+        return self.llm_model_name
+
+    @computed_field
+    @property
+    def ollama_timeout(self) -> int:
+        return self.llm_timeout
+
+    @computed_field
+    @property
+    def ollama_max_retries(self) -> int:
+        return self.llm_max_retries
 
     # Fallback LLM settings (for testing or backup)
     openai_api_key: str | None = Field(default=None, description="OpenAI API key")
