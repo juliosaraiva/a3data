@@ -459,16 +459,16 @@ async def test_incident_extraction_with_complex_scenario(client):
     response = await client.post("/api/v1/incidents/extract", json={
         "text": "Hoje às 09:30 no datacenter SP-01 houve queda de energia"
     })
-    
+
     assert response.status_code == 200
     data = response.json()
-    
+
     # AI-aware assertions: check presence and format rather than exact values
     assert "data_ocorrencia" in data
     assert "local" in data
     assert "tipo_incidente" in data
     assert "impacto" in data
-    
+
     # Validate date format when present
     if data["data_ocorrencia"]:
         assert len(data["data_ocorrencia"]) >= 10  # At least YYYY-MM-DD
@@ -494,12 +494,12 @@ async def test_portuguese_relative_dates(client):
         ("hoje de manhã", "2024-01-15"),   # Today morning
         ("sexta-feira passada", "2024-01-12")  # Last Friday
     ]
-    
+
     for text_input, expected_date in test_cases:
         response = await client.post("/api/v1/incidents/extract", json={
             "text": f"Incidente: {text_input} houve falha no sistema"
         })
-        
+
         data = response.json()
         if data.get("data_ocorrencia"):
             assert expected_date in data["data_ocorrencia"]
@@ -525,7 +525,7 @@ async def test_input_validation_errors(client):
         ({"text": "x" * 10000}, 422),  # Text too long
         ({"text": "short"}, 422)  # Text too short
     ]
-    
+
     for payload, expected_status in test_cases:
         response = await client.post("/api/v1/incidents/extract", json=payload)
         assert response.status_code == expected_status
@@ -613,10 +613,10 @@ if data["tipo_incidente"]:
 if data.get("data_ocorrencia"):
     # Check date format rather than exact value
     assert re.match(r'\d{4}-\d{2}-\d{2}', data["data_ocorrencia"])
-    
+
 if data.get("local"):
     # Check location contains expected elements
-    assert any(term in data["local"].lower() 
+    assert any(term in data["local"].lower()
                for term in ["datacenter", "sp", "são paulo"])
 ```
 
@@ -624,7 +624,7 @@ if data.get("local"):
 
 ```python
 # Allow for partial extraction with confidence thresholds
-extracted_fields = sum(1 for field in ["data_ocorrencia", "local", 
+extracted_fields = sum(1 for field in ["data_ocorrencia", "local",
                                       "tipo_incidente", "impacto"]
                       if data.get(field))
 
