@@ -208,6 +208,12 @@ class SupervisorAgent:
         Returns:
             Next action to take
         """
+        # CRITICAL FIX: Always check attempt limits FIRST before any other logic
+        # This prevents GraphRecursionError by stopping infinite loops immediately
+        if state.extraction_attempts >= state.max_attempts:
+            self.logger.info(f"Attempt limit reached: {state.extraction_attempts}/{state.max_attempts}, forcing finish")
+            return WorkflowAction.FINISH.value
+
         try:
             # Try LLM-based decision first
             return await self._use_llm_for_decision(state)
@@ -290,8 +296,13 @@ class SupervisorAgent:
         if not state.extracted_data:
             return WorkflowAction.EXTRACT.value
 
+        # CRITICAL FIX: Check attempt limit BEFORE checking completeness
+        # This prevents infinite loops when extraction consistently fails
+        if not state.should_retry_extraction():
+            return WorkflowAction.FINISH.value
+
         # If we have partial data and can retry, try again
-        if state.extracted_data and self._is_extraction_incomplete(state) and state.should_retry_extraction():
+        if state.extracted_data and self._is_extraction_incomplete(state):
             return WorkflowAction.RETRY.value
 
         # Otherwise, we're done

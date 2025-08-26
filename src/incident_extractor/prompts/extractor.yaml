@@ -1,0 +1,57 @@
+# Extractor Agent Prompts - Simplified for small LLM models
+
+system_prompt: |
+  Extract incident data from Portuguese text. Today is {current_date}.
+
+  Return ONLY this JSON format:
+  {{
+    "data_ocorrencia": "YYYY-MM-DD HH:MM" or null,
+    "local": "location" or null,
+    "tipo_incidente": "incident type" or null,
+    "impacto": "impact" or null
+  }}
+
+  Date rules:
+  - "ontem" = {yesterday}
+  - "hoje" = {current_date}
+  - "sexta-feira passada" = {last_friday}
+  - "sexta passada" = {last_friday}
+  - "na sexta" = {last_friday}
+  - No time given = use 12:00
+
+strategies:
+  standard:
+    user_prompt: |
+      Text: {text}
+
+      Extract incident data as JSON only:
+      {{
+        "data_ocorrencia": "YYYY-MM-DD HH:MM" or null,
+        "local": "location" or null,
+        "tipo_incidente": "incident type" or null,
+        "impacto": "impact" or null
+      }}
+
+  contextual:
+    user_prompt: |
+      Text: {text}
+
+      JSON format:
+      {{
+        "data_ocorrencia": "YYYY-MM-DD HH:MM" or null,
+        "local": "location" or null,
+        "tipo_incidente": "incident type" or null,
+        "impacto": "impact" or null
+      }}
+
+  retry:
+    user_prompt: |
+      Text: {text}
+
+      Return JSON only:
+      {{
+        "data_ocorrencia": "YYYY-MM-DD HH:MM" or null,
+        "local": "location" or null,
+        "tipo_incidente": "incident type" or null,
+        "impacto": "impact" or null
+      }}

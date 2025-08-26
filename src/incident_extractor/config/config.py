@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # LLM settings
     llm_base_url: str = Field(default="http://localhost:11434", description="Ollama base URL", alias="ollama_base_url")
-    llm_model_name: str = Field(default="gemma2:2b", description="Default Ollama model", alias="ollama_model")
+    llm_model_name: str = Field(default="gemma3:4b", description="Default Ollama model", alias="ollama_model")
     llm_timeout: int = Field(default=60, description="Ollama request timeout in seconds", alias="ollama_timeout")
     llm_max_retries: int = Field(default=3, description="Maximum retries for Ollama requests", alias="ollama_max_retries")
 
