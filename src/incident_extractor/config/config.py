@@ -3,7 +3,7 @@
 import os
 from functools import lru_cache
 
-from pydantic import Field, computed_field, validator
+from pydantic import Field, computed_field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -100,7 +100,7 @@ class Settings(BaseSettings):
     metrics_port: int = Field(default=9090, description="Metrics server port")
     sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
-    @validator("environment")
+    @field_validator("environment")
     def validate_environment(cls, v):
         """Validate environment value."""
         allowed = ["development", "dev", "local", "staging", "stage", "production", "prod"]
@@ -108,7 +108,7 @@ class Settings(BaseSettings):
             raise ValueError(f"Environment must be one of: {allowed}")
         return v.lower()
 
-    @validator("log_level")
+    @field_validator("log_level")
     def validate_log_level(cls, v):
         """Validate log level."""
         allowed = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
