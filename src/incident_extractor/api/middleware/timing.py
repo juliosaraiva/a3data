@@ -16,7 +16,6 @@ Features:
 import logging
 import time
 from datetime import datetime
-from typing import Optional
 
 from fastapi import Request, Response
 
@@ -34,7 +33,7 @@ class TimingMiddleware:
         logger_name: str = "api.timing",
         slow_request_threshold: float = 2.0,
         very_slow_request_threshold: float = 5.0,
-        exclude_paths: Optional[list[str]] = None,
+        exclude_paths: list[str] | None = None,
         add_timing_headers: bool = True,
     ):
         """

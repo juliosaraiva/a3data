@@ -17,7 +17,6 @@ import logging
 import traceback
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -45,8 +44,8 @@ class ErrorResponse(BaseModel):
     error_type: str
     error_category: str
     message: str
-    details: Optional[str] = None
-    request_id: Optional[str] = None
+    details: str | None = None
+    request_id: str | None = None
     timestamp: str
     status_code: int
 

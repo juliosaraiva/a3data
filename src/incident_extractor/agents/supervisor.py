@@ -176,9 +176,7 @@ class SupervisorAgent:
             service_manager = await get_llm_service_manager()
 
             # Generate decision using fallback services
-            response = await service_manager.generate_with_fallback(
-                ["ollama", "openai", "mock"], prompt, self.config.system_prompt
-            )
+            response = await service_manager.generate_with_fallback(["ollama", "openai"], prompt, self.config.system_prompt)
 
             # Parse LLM response to extract decision
             return self._parse_llm_decision(response)

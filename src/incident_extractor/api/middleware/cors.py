@@ -12,7 +12,6 @@ Features:
 """
 
 import logging
-from typing import Optional
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,11 +27,11 @@ class CORSConfiguration:
 
     def __init__(
         self,
-        allowed_origins: Optional[list[str]] = None,
+        allowed_origins: list[str] | None = None,
         allow_credentials: bool = True,
-        allowed_methods: Optional[list[str]] = None,
-        allowed_headers: Optional[list[str]] = None,
-        expose_headers: Optional[list[str]] = None,
+        allowed_methods: list[str] | None = None,
+        allowed_headers: list[str] | None = None,
+        expose_headers: list[str] | None = None,
         max_age: int = 600,  # 10 minutes
         logger_name: str = "api.cors",
     ):
@@ -159,7 +158,7 @@ default_cors_config = CORSConfiguration()
 
 
 # Helper function for easy integration
-def configure_cors(app: FastAPI, cors_config: Optional[CORSConfiguration] = None) -> None:
+def configure_cors(app: FastAPI, cors_config: CORSConfiguration | None = None) -> None:
     """
     Configure CORS for FastAPI application.
 

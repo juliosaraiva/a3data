@@ -18,7 +18,7 @@ import os
 import platform
 import sys
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -51,10 +51,10 @@ class WorkflowInfo(BaseModel):
     """Workflow debugging information model."""
 
     workflow_type: str = Field(..., description="Type of workflow")
-    nodes: List[str] = Field(..., description="List of workflow nodes")
-    edges: List[Dict[str, str]] = Field(..., description="Workflow edges/transitions")
+    nodes: list[str] = Field(..., description="List of workflow nodes")
+    edges: list[dict[str, str]] = Field(..., description="Workflow edges/transitions")
     entry_point: str = Field(..., description="Workflow entry point")
-    configuration: Dict[str, Any] = Field(..., description="Workflow configuration")
+    configuration: dict[str, Any] = Field(..., description="Workflow configuration")
     validation_status: str = Field(..., description="Workflow validation status")
 
 
@@ -63,9 +63,9 @@ class ComponentStatus(BaseModel):
 
     component_name: str = Field(..., description="Name of the component")
     status: str = Field(..., description="Component status")
-    details: Dict[str, Any] = Field(default_factory=dict, description="Component details")
+    details: dict[str, Any] = Field(default_factory=dict, description="Component details")
     last_checked: datetime = Field(default_factory=datetime.now)
-    errors: List[str] = Field(default_factory=list, description="Component errors")
+    errors: list[str] = Field(default_factory=list, description="Component errors")
 
 
 class ConfigurationInfo(BaseModel):
@@ -78,8 +78,8 @@ class ConfigurationInfo(BaseModel):
     api_host: str = Field(..., description="API host")
     api_port: int = Field(..., description="API port")
     log_level: str = Field(..., description="Logging level")
-    llm_configuration: Dict[str, Any] = Field(..., description="LLM configuration (sanitized)")
-    environment_variables: Dict[str, str] = Field(..., description="Sanitized environment variables")
+    llm_configuration: dict[str, Any] = Field(..., description="LLM configuration (sanitized)")
+    environment_variables: dict[str, str] = Field(..., description="Sanitized environment variables")
 
 
 def _sanitize_config_value(key: str, value: Any) -> Any:
@@ -94,7 +94,7 @@ def _sanitize_config_value(key: str, value: Any) -> Any:
     return value
 
 
-def _get_sanitized_env_vars() -> Dict[str, str]:
+def _get_sanitized_env_vars() -> dict[str, str]:
     """Get sanitized environment variables for debugging."""
     sanitized_env = {}
     relevant_prefixes = ["INCIDENT_", "API_", "LLM_", "DEBUG_", "LOG_"]
@@ -235,8 +235,8 @@ async def get_workflow_info(request: Request) -> WorkflowInfo:
         ) from e
 
 
-@router.get("/components", response_model=List[ComponentStatus])
-async def get_components_status(request: Request) -> List[ComponentStatus]:
+@router.get("/components", response_model=list[ComponentStatus])
+async def get_components_status(request: Request) -> list[ComponentStatus]:
     """
     Get status of all system components.
 
@@ -419,7 +419,7 @@ async def test_extraction_workflow(
     request: ExtractionRequest,
     http_request: Request,
     verbose: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Test the extraction workflow with detailed debugging information.
 

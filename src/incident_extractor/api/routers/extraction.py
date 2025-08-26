@@ -14,7 +14,7 @@ Features:
 """
 
 import time
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 
@@ -97,7 +97,7 @@ def _process_workflow_result(workflow_result: Any) -> dict:
     return {"fields": extracted_fields, "scores": confidence_scores}
 
 
-def _validate_batch_requests(requests: Dict[str, ExtractionRequest]) -> None:
+def _validate_batch_requests(requests: dict[str, ExtractionRequest]) -> None:
     """
     Validate batch request parameters.
 
@@ -331,10 +331,10 @@ async def extract_incident(
 
 @router.post("/extract/batch")
 async def extract_incidents_batch(
-    requests: Dict[str, ExtractionRequest],
+    requests: dict[str, ExtractionRequest],
     http_request: Request,
     request_id: str = Depends(get_request_id),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Extract structured incident information from multiple texts in batch.
 

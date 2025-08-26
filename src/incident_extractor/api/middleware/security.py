@@ -15,7 +15,6 @@ Features:
 """
 
 import logging
-from typing import Optional
 
 from fastapi import HTTPException, Request, Response, status
 
@@ -36,8 +35,8 @@ class SecurityMiddleware:
         enable_hsts: bool = True,
         hsts_max_age: int = 31536000,  # 1 year
         enable_csp: bool = True,
-        allowed_origins: Optional[list[str]] = None,
-        exclude_paths: Optional[list[str]] = None,
+        allowed_origins: list[str] | None = None,
+        exclude_paths: list[str] | None = None,
     ):
         """
         Initialize security middleware.
@@ -286,7 +285,7 @@ class RateLimitingPreparation:
     in future versions of the application.
     """
 
-    def __init__(self, redis_url: Optional[str] = None):
+    def __init__(self, redis_url: str | None = None):
         """
         Initialize rate limiting preparation.
 

@@ -2,7 +2,6 @@
 
 import os
 from functools import lru_cache
-from typing import List, Optional
 
 from pydantic import Field, computed_field, validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -28,13 +27,13 @@ class Settings(BaseSettings):
     api_host: str = Field(default="0.0.0.0", description="API host")
     api_port: int = Field(default=8000, description="API port")
     api_prefix: str = Field(default="/api/v1", description="API prefix")
-    cors_origins: List[str] = Field(
+    cors_origins: list[str] = Field(
         default=["http://localhost:3000", "http://localhost:8080"], description="CORS allowed origins"
     )
 
     # Production security settings
     secret_key: str = Field(default="change-me-in-production-use-secrets-manager", description="Secret key for signing tokens")
-    allowed_hosts: List[str] = Field(default=["localhost", "127.0.0.1"], description="Allowed hosts for production")
+    allowed_hosts: list[str] = Field(default=["localhost", "127.0.0.1"], description="Allowed hosts for production")
     enable_docs: bool = Field(default=True, description="Enable OpenAPI docs endpoints")
     enable_metrics: bool = Field(default=True, description="Enable metrics endpoints")
 
@@ -45,13 +44,13 @@ class Settings(BaseSettings):
     ollama_max_retries: int = Field(default=3, description="Maximum retries for Ollama requests")
 
     # Fallback LLM settings (for testing or backup)
-    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    openai_api_key: str | None = Field(default=None, description="OpenAI API key")
     openai_model: str = Field(default="gpt-3.5-turbo", description="OpenAI model")
 
     # Logging settings
     log_level: str = Field(default="INFO", description="Logging level")
     log_format: str = Field(default="json", description="Log format (json or text)")
-    log_file: Optional[str] = Field(default=None, description="Log file path")
+    log_file: str | None = Field(default=None, description="Log file path")
     log_rotation: bool = Field(default=True, description="Enable log rotation")
     log_max_size: str = Field(default="100MB", description="Maximum log file size")
     log_backup_count: int = Field(default=5, description="Number of backup log files")
@@ -78,7 +77,7 @@ class Settings(BaseSettings):
     # Monitoring and observability
     enable_tracing: bool = Field(default=False, description="Enable distributed tracing")
     metrics_port: int = Field(default=9090, description="Metrics server port")
-    sentry_dsn: Optional[str] = Field(default=None, description="Sentry DSN for error tracking")
+    sentry_dsn: str | None = Field(default=None, description="Sentry DSN for error tracking")
 
     @validator("environment")
     def validate_environment(cls, v):
@@ -204,7 +203,7 @@ class Settings(BaseSettings):
             return {}
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     """Get cached application settings."""
     return Settings()

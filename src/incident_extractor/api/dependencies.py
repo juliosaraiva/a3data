@@ -6,7 +6,7 @@ and request processing components used throughout the FastAPI application.
 """
 
 import time
-from typing import Generator
+from collections.abc import Generator
 
 from fastapi import Depends
 
@@ -82,7 +82,7 @@ async def get_health_service():
     return await get_health_service_async()
 
 
-def get_processing_timer() -> Generator[dict[str, float], None, None]:
+def get_processing_timer() -> Generator[dict[str, float]]:
     """
     Dependency to provide request processing timing context.
 

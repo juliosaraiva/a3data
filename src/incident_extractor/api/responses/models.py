@@ -8,7 +8,7 @@ error handling, and structured data formatting.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -52,9 +52,9 @@ class ResponseMetadata(BaseModel):
     timestamp: str = Field(
         default_factory=lambda: datetime.utcnow().isoformat() + "Z", description="Response timestamp in ISO 8601 format"
     )
-    processing_time_ms: Optional[float] = Field(default=None, description="Processing time in milliseconds", ge=0.0)
+    processing_time_ms: float | None = Field(default=None, description="Processing time in milliseconds", ge=0.0)
     api_version: str = Field(default="1.0.0", description="API version used for this response")
-    endpoint: Optional[str] = Field(default=None, description="API endpoint that generated this response")
+    endpoint: str | None = Field(default=None, description="API endpoint that generated this response")
 
 
 class BaseResponse(BaseModel, Generic[T]):
@@ -78,7 +78,7 @@ class BaseResponse(BaseModel, Generic[T]):
 
     status: ResponseStatus = Field(description="Response status indicating success, error, or partial success")
     message: str = Field(description="Human-readable status message")
-    data: Optional[T] = Field(None, description="Response payload data")
+    data: T | None = Field(None, description="Response payload data")
     metadata: ResponseMetadata = Field(
         default_factory=lambda: ResponseMetadata(), description="Response metadata for tracking and monitoring"
     )
@@ -118,9 +118,9 @@ class ErrorDetail(BaseModel):
 
     error_code: str = Field(description="Machine-readable error code for programmatic handling")
     error_type: str = Field(description="Error category/type for classification")
-    field: Optional[str] = Field(None, description="Specific field that caused the error (if applicable)")
+    field: str | None = Field(None, description="Specific field that caused the error (if applicable)")
     description: str = Field(description="Human-readable error description")
-    suggestion: Optional[str] = Field(None, description="Suggested resolution or next steps")
+    suggestion: str | None = Field(None, description="Suggested resolution or next steps")
 
 
 class ErrorResponse(BaseResponse[None]):
@@ -149,7 +149,7 @@ class ErrorResponse(BaseResponse[None]):
     )
 
     status: ResponseStatus = Field(default=ResponseStatus.ERROR, description="Error status")
-    errors: List[ErrorDetail] = Field(default_factory=list, description="List of error details")
+    errors: list[ErrorDetail] = Field(default_factory=list, description="List of error details")
     data: None = Field(default=None, description="No data in error responses")
 
 
@@ -160,36 +160,36 @@ class HealthData(BaseModel):
     """Health check response data structure."""
 
     service_status: str = Field(description="Overall service health status")
-    components: Dict[str, Any] = Field(default_factory=dict, description="Individual component health status")
-    uptime_seconds: Optional[float] = Field(None, description="Service uptime in seconds")
-    version: Optional[str] = Field(None, description="Application version")
+    components: dict[str, Any] = Field(default_factory=dict, description="Individual component health status")
+    uptime_seconds: float | None = Field(None, description="Service uptime in seconds")
+    version: str | None = Field(None, description="Application version")
 
 
 class ExtractionData(BaseModel):
     """Incident extraction response data structure."""
 
-    extracted_fields: Dict[str, Any] = Field(description="Extracted incident information fields")
-    confidence_scores: Optional[Dict[str, float]] = Field(None, description="Confidence scores for extracted fields")
-    processing_steps: Optional[List[str]] = Field(None, description="Processing steps taken during extraction")
-    warnings: Optional[List[str]] = Field(None, description="Processing warnings (non-fatal issues)")
+    extracted_fields: dict[str, Any] = Field(description="Extracted incident information fields")
+    confidence_scores: dict[str, float] | None = Field(None, description="Confidence scores for extracted fields")
+    processing_steps: list[str] | None = Field(None, description="Processing steps taken during extraction")
+    warnings: list[str] | None = Field(None, description="Processing warnings (non-fatal issues)")
 
 
 class MetricsData(BaseModel):
     """Metrics response data structure."""
 
-    performance_metrics: Dict[str, Any] = Field(description="Application performance metrics")
-    system_metrics: Optional[Dict[str, Any]] = Field(None, description="System-level metrics")
-    health_score: Optional[float] = Field(None, description="Overall system health score", ge=0.0, le=100.0)
-    collection_period: Optional[str] = Field(None, description="Metrics collection time period")
+    performance_metrics: dict[str, Any] = Field(description="Application performance metrics")
+    system_metrics: dict[str, Any] | None = Field(None, description="System-level metrics")
+    health_score: float | None = Field(None, description="Overall system health score", ge=0.0, le=100.0)
+    collection_period: str | None = Field(None, description="Metrics collection time period")
 
 
 class DebugData(BaseModel):
     """Debug information response data structure."""
 
-    system_info: Dict[str, Any] = Field(description="System diagnostic information")
-    configuration: Optional[Dict[str, Any]] = Field(None, description="Application configuration (sanitized)")
-    component_status: Optional[List[Dict[str, Any]]] = Field(None, description="Individual component status information")
-    diagnostics: Optional[Dict[str, Any]] = Field(None, description="Additional diagnostic information")
+    system_info: dict[str, Any] = Field(description="System diagnostic information")
+    configuration: dict[str, Any] | None = Field(None, description="Application configuration (sanitized)")
+    component_status: list[dict[str, Any]] | None = Field(None, description="Individual component status information")
+    diagnostics: dict[str, Any] | None = Field(None, description="Additional diagnostic information")
 
 
 # Typed response aliases for common use cases
@@ -202,9 +202,9 @@ DebugResponse = SuccessResponse[DebugData]
 def create_success_response(
     data: T,
     message: str = "Operation completed successfully",
-    request_id: Optional[str] = None,
-    processing_time_ms: Optional[float] = None,
-    endpoint: Optional[str] = None,
+    request_id: str | None = None,
+    processing_time_ms: float | None = None,
+    endpoint: str | None = None,
 ) -> SuccessResponse[T]:
     """
     Helper function to create standardized success responses.
@@ -232,10 +232,10 @@ def create_success_response(
 
 def create_error_response(
     message: str,
-    errors: List[ErrorDetail],
+    errors: list[ErrorDetail],
     status: ResponseStatus = ResponseStatus.ERROR,
-    request_id: Optional[str] = None,
-    endpoint: Optional[str] = None,
+    request_id: str | None = None,
+    endpoint: str | None = None,
 ) -> ErrorResponse:
     """
     Helper function to create standardized error responses.

@@ -8,7 +8,7 @@ component availability, service health, and overall system status.
 import asyncio
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 from ..config import get_settings
 from ..config.logging import get_logger
@@ -27,13 +27,13 @@ class ComponentStatus(str, Enum):
 class HealthCheckResult:
     """Result of a health check operation."""
 
-    def __init__(self, status: ComponentStatus, details: Dict[str, Any], response_time_ms: float = 0.0):
+    def __init__(self, status: ComponentStatus, details: dict[str, Any], response_time_ms: float = 0.0):
         self.status = status
         self.details = details
         self.response_time_ms = response_time_ms
         self.timestamp = datetime.now()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert health check result to dictionary."""
         return {
             "status": self.status.value,
@@ -303,7 +303,7 @@ class HealthService:
 
         return health_status
 
-    async def get_quick_health_status(self) -> Dict[str, str]:
+    async def get_quick_health_status(self) -> dict[str, str]:
         """
         Get quick health status without detailed checks.
 

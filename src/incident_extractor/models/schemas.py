@@ -3,7 +3,7 @@
 import re
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -131,7 +131,7 @@ class HealthStatus(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.now)
     version: str = Field(..., description="Versão da aplicação")
 
-    components: Dict[str, Dict[str, Any]] = Field(default_factory=dict, description="Status dos componentes")
+    components: dict[str, dict[str, Any]] = Field(default_factory=dict, description="Status dos componentes")
 
 
 class AgentState(BaseModel):
@@ -141,7 +141,7 @@ class AgentState(BaseModel):
 
     # Input data
     raw_text: str = Field(..., description="Texto original do incidente")
-    options: Dict[str, Any] = Field(default_factory=dict, description="Opções de processamento")
+    options: dict[str, Any] = Field(default_factory=dict, description="Opções de processamento")
 
     # Processing state
     status: ProcessingStatus = Field(default=ProcessingStatus.PENDING)

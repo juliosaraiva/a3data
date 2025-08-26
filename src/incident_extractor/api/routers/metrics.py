@@ -15,7 +15,7 @@ Features:
 
 import time
 from datetime import datetime
-from typing import Any, Dict, List
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -50,7 +50,7 @@ class ExtractionMetrics(BaseModel):
     partial_extractions: int = Field(..., description="Number of partial extractions")
     failed_extractions: int = Field(..., description="Number of failed extractions")
     avg_extraction_time_ms: float = Field(..., description="Average extraction processing time")
-    fields_extraction_success_rate: Dict[str, float] = Field(..., description="Success rate for each field extraction")
+    fields_extraction_success_rate: dict[str, float] = Field(..., description="Success rate for each field extraction")
     avg_text_length: float = Field(..., description="Average input text length")
 
 
@@ -72,7 +72,7 @@ class DetailedMetrics(BaseModel):
     request_metrics: RequestMetrics
     extraction_metrics: ExtractionMetrics
     system_metrics: SystemMetrics
-    alerts: List[str] = Field(default_factory=list, description="Active system alerts")
+    alerts: list[str] = Field(default_factory=list, description="Active system alerts")
 
 
 class MetricsCollector:
@@ -130,7 +130,7 @@ class MetricsCollector:
         self,
         processing_time_ms: float,
         success_status: str,
-        extracted_fields: Dict[str, bool],
+        extracted_fields: dict[str, bool],
         text_length: int,
     ) -> None:
         """Record an extraction metric."""
@@ -241,7 +241,7 @@ class MetricsCollector:
             health_score=round(health_score, 2),
         )
 
-    def check_alerts(self) -> List[str]:
+    def check_alerts(self) -> list[str]:
         """Check for system alerts based on metrics."""
         alerts = []
 
@@ -339,7 +339,7 @@ async def get_comprehensive_metrics(request: Request) -> DetailedMetrics:
 
 
 @router.get("/health-score")
-async def get_health_score(request: Request) -> Dict[str, Any]:
+async def get_health_score(request: Request) -> dict[str, Any]:
     """
     Get current system health score.
 
@@ -377,7 +377,7 @@ async def get_health_score(request: Request) -> Dict[str, Any]:
 
 
 @router.get("/performance")
-async def get_performance_metrics(request: Request) -> Dict[str, Any]:
+async def get_performance_metrics(request: Request) -> dict[str, Any]:
     """
     Get performance-focused metrics.
 

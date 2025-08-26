@@ -8,7 +8,8 @@ deployment scenarios with proper configuration management.
 
 import signal
 import sys
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 import uvicorn
 from uvicorn.config import Config
@@ -29,9 +30,9 @@ class ApplicationManager:
     def __init__(self) -> None:
         """Initialize the application manager."""
         self.app = None
-        self.server: Optional[Server] = None
+        self.server: Server | None = None
         self.logger = get_logger("app.manager")
-        self._shutdown_handlers: List[Callable[[], None]] = []
+        self._shutdown_handlers: list[Callable[[], None]] = []
 
     def create_application(self):
         """
@@ -115,7 +116,7 @@ def setup_signal_handlers() -> None:
     logger.info("Signal handlers configured")
 
 
-def get_server_config(host: str = "0.0.0.0", port: int = 8000, **kwargs) -> Dict[str, Any]:
+def get_server_config(host: str = "0.0.0.0", port: int = 8000, **kwargs) -> dict[str, Any]:
     """
     Get server configuration for development and production.
 

@@ -7,7 +7,7 @@ thread-safe operations, proper state management, and dependency injection suppor
 
 import threading
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from ..config.logging import get_logger
 from ..models.schemas import ProcessingMetrics, ProcessingStatus
@@ -147,7 +147,7 @@ class MetricsService:
                 last_updated=self._metrics.last_updated,
             )
 
-    def get_processing_statistics(self) -> Dict[str, Any]:
+    def get_processing_statistics(self) -> dict[str, Any]:
         """
         Get detailed processing statistics.
 
@@ -192,7 +192,7 @@ class MetricsService:
             self._processing_times.clear()
             self._logger.info("All metrics reset to initial values")
 
-    async def get_health_status(self) -> Dict[str, Any]:
+    async def get_health_status(self) -> dict[str, Any]:
         """
         Get metrics service health status.
 

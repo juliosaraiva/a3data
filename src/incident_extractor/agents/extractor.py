@@ -161,9 +161,7 @@ class ExtractorAgent:
             service_manager = await get_llm_service_manager()
 
             # Generate extraction using fallback services
-            response = await service_manager.generate_with_fallback(
-                ["ollama", "openai", "mock"], prompt, self.config.system_prompt
-            )
+            response = await service_manager.generate_with_fallback(["ollama", "openai"], prompt, self.config.system_prompt)
 
             # Parse JSON response
             extracted_data = self._parse_extraction_response(response)

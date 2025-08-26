@@ -28,7 +28,6 @@ show_help() {
     echo -e "  ${GREEN}validate${NC}       - Validate configuration"
     echo -e "  ${GREEN}ollama${NC}         - Switch to Ollama provider"
     echo -e "  ${GREEN}openai${NC}         - Switch to OpenAI provider (interactive)"
-    echo -e "  ${GREEN}mock${NC}           - Switch to Mock provider (for testing)"
     echo -e "  ${GREEN}backup${NC}         - Create backup of current .env"
     echo -e "  ${GREEN}restore${NC}        - Restore .env from backup"
     echo ""
@@ -162,24 +161,40 @@ switch_to_openai() {
     echo -e "${GREEN}✓ Switched to OpenAI provider${NC}"
 }
 
-switch_to_mock() {
+switch_to_openai() {
     if [ ! -f "$ENV_FILE" ]; then
         echo -e "${RED}Error: $ENV_FILE not found${NC}"
         exit 1
     fi
 
-    echo -e "${BOLD}${BLUE}🎭 Switching to Mock provider (for testing)${NC}"
+    echo -e "${BOLD}${BLUE}🤖 Switching to OpenAI provider${NC}"
+    echo ""
+
+    read -p "$(echo -e ${YELLOW}Enter your OpenAI API key: ${NC})" api_key
+
+    if [ -z "$api_key" ]; then
+        echo -e "${RED}Error: API key cannot be empty${NC}"
+        exit 1
+    fi
 
     # Create backup
     cp "$ENV_FILE" "$ENV_FILE.backup.$(date +%Y%m%d-%H%M%S)"
 
     # Update configuration
-    sed -i.tmp 's/LLM_PROVIDER=".*"/LLM_PROVIDER="mock"/' "$ENV_FILE"
-    sed -i.tmp 's/LLM_API_KEY=".*"/LLM_API_KEY=""/' "$ENV_FILE"
+    sed -i.tmp 's/LLM_PROVIDER=".*"/LLM_PROVIDER="openai"/' "$ENV_FILE"
+    sed -i.tmp 's/LLM_MODEL_NAME=".*"/LLM_MODEL_NAME="gpt-4o-mini"/' "$ENV_FILE"
+
+    # Update or add API key
+    if grep -q "LLM_API_KEY=" "$ENV_FILE"; then
+        sed -i.tmp "s/LLM_API_KEY=\".*\"/LLM_API_KEY=\"$api_key\"/" "$ENV_FILE"
+    else
+        echo "LLM_API_KEY=\"$api_key\"" >> "$ENV_FILE"
+    fi
+
     rm "$ENV_FILE.tmp"
 
-    echo -e "${GREEN}✓ Switched to Mock provider${NC}"
-    echo -e "${BLUE}💡 Mock provider returns predefined responses for testing${NC}"
+    echo -e "${GREEN}✓ Switched to OpenAI provider${NC}"
+    echo -e "${BLUE}💡 Using gpt-4o-mini model${NC}"
 }
 
 backup_env() {
@@ -227,9 +242,6 @@ case "${1:-help}" in
         ;;
     "openai")
         switch_to_openai
-        ;;
-    "mock")
-        switch_to_mock
         ;;
     "backup")
         backup_env

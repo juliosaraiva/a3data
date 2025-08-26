@@ -15,7 +15,7 @@ Features:
 
 import time
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, Request, status
 
@@ -114,7 +114,7 @@ async def basic_health_check(
 @router.get("/health/detailed")
 async def detailed_health_check(
     request: Request, llm_services=Depends(get_llm_service_manager), workflow_service=Depends(get_workflow_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Comprehensive health check endpoint.
 
@@ -234,7 +234,7 @@ async def detailed_health_check(
 @router.get("/health/ready")
 async def readiness_check(
     request: Request, llm_services=Depends(get_llm_service_manager), workflow_service=Depends(get_workflow_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Kubernetes/container readiness check.
 
@@ -296,7 +296,7 @@ async def readiness_check(
 
 
 @router.get("/health/live")
-async def liveness_check(request: Request) -> Dict[str, Any]:
+async def liveness_check(request: Request) -> dict[str, Any]:
     """
     Kubernetes/container liveness check.
 

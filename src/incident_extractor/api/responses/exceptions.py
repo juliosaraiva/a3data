@@ -6,7 +6,7 @@ error handling throughout the application with proper HTTP status code
 mapping and standardized error messages.
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import HTTPException, status
 
@@ -25,9 +25,9 @@ class APIException(HTTPException):
         detail: str = "Internal server error",
         error_code: str = "INTERNAL_ERROR",
         error_type: str = "InternalError",
-        field: Optional[str] = None,
-        suggestion: Optional[str] = None,
-        headers: Optional[Dict[str, Any]] = None,
+        field: str | None = None,
+        suggestion: str | None = None,
+        headers: dict[str, Any] | None = None,
     ):
         """
         Initialize API exception with structured error information.
@@ -62,8 +62,8 @@ class ValidationException(APIException):
     def __init__(
         self,
         detail: str,
-        field: Optional[str] = None,
-        suggestion: Optional[str] = None,
+        field: str | None = None,
+        suggestion: str | None = None,
         status_code: int = status.HTTP_422_UNPROCESSABLE_ENTITY,
     ):
         """
@@ -96,8 +96,8 @@ class ExtractionException(APIException):
     def __init__(
         self,
         detail: str,
-        extraction_step: Optional[str] = None,
-        suggestion: Optional[str] = None,
+        extraction_step: str | None = None,
+        suggestion: str | None = None,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
     ):
         """
@@ -130,8 +130,8 @@ class ProcessingException(APIException):
     def __init__(
         self,
         detail: str,
-        process_name: Optional[str] = None,
-        suggestion: Optional[str] = None,
+        process_name: str | None = None,
+        suggestion: str | None = None,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
     ):
         """
@@ -167,8 +167,8 @@ class ServiceException(APIException):
     def __init__(
         self,
         detail: str,
-        service_name: Optional[str] = None,
-        suggestion: Optional[str] = None,
+        service_name: str | None = None,
+        suggestion: str | None = None,
         status_code: int = status.HTTP_503_SERVICE_UNAVAILABLE,
     ):
         """
@@ -201,8 +201,8 @@ class HealthCheckException(APIException):
     def __init__(
         self,
         detail: str,
-        component_name: Optional[str] = None,
-        suggestion: Optional[str] = None,
+        component_name: str | None = None,
+        suggestion: str | None = None,
         status_code: int = status.HTTP_503_SERVICE_UNAVAILABLE,
     ):
         """
@@ -235,8 +235,8 @@ class MetricsException(APIException):
     def __init__(
         self,
         detail: str,
-        metric_name: Optional[str] = None,
-        suggestion: Optional[str] = None,
+        metric_name: str | None = None,
+        suggestion: str | None = None,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
     ):
         """
@@ -264,7 +264,7 @@ class MetricsException(APIException):
 class TextValidationException(ValidationException):
     """Exception for text input validation errors."""
 
-    def __init__(self, detail: str, text_length: Optional[int] = None):
+    def __init__(self, detail: str, text_length: int | None = None):
         """
         Initialize text validation exception.
 
@@ -289,7 +289,7 @@ class TextValidationException(ValidationException):
 class LLMServiceException(ServiceException):
     """Exception for LLM service integration errors."""
 
-    def __init__(self, detail: str, provider: Optional[str] = None):
+    def __init__(self, detail: str, provider: str | None = None):
         """
         Initialize LLM service exception.
 
@@ -307,7 +307,7 @@ class LLMServiceException(ServiceException):
 class WorkflowException(ProcessingException):
     """Exception for LangGraph workflow errors."""
 
-    def __init__(self, detail: str, node_name: Optional[str] = None):
+    def __init__(self, detail: str, node_name: str | None = None):
         """
         Initialize workflow exception.
 
@@ -325,7 +325,7 @@ class WorkflowException(ProcessingException):
 # Exception handling utilities
 
 
-def create_error_detail_from_exception(exception: APIException) -> Dict[str, Any]:
+def create_error_detail_from_exception(exception: APIException) -> dict[str, Any]:
     """
     Convert APIException to error detail dictionary.
 

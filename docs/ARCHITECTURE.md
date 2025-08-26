@@ -7,7 +7,7 @@ The Incident Extractor API is an intelligent system designed to extract structur
 ### Key Capabilities
 
 - **Multi-Agent Processing**: Coordinated workflow with specialized agents
-- **LLM Provider Flexibility**: Support for Ollama, OpenAI, and Mock providers
+- **LLM Provider Flexibility**: Support for Ollama, OpenAI, Gemini, and Perplexity providers
 - **Brazilian Localization**: Native support for Portuguese language and Brazilian date/time formats
 - **Resilient Processing**: Automatic retry logic and error recovery
 - **Real-time Monitoring**: Health checks, metrics, and structured logging
@@ -99,13 +99,14 @@ The Incident Extractor API is an intelligent system designed to extract structur
                     │         └─────────────────────────────────┘     │
                     │                                                 │
                     │  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐│
-                    │  │   Ollama    │ │   OpenAI    │ │    Mock     ││
-                    │  │  Service    │ │  Service    │ │  Service    ││
+                    │  │   Ollama    │ │   OpenAI    │ │  Perplexity ││
+                    │  │  Service    │ │  Service    │ │   Service   ││
                     │  └─────────────┘ └─────────────┘ └─────────────┘│
                     └─────────────────────────────────────────────────┘
 ```
 
 ### Folder Structure (Current State)
+
 ```
 src/incident_extractor/
 ├── agents/          # Multi-agent system implementation
@@ -222,13 +223,12 @@ START → Supervisor → [Preprocessor|Extractor] → Supervisor → [Retry|Fini
 
 #### Supported Providers
 
-| Provider       | Primary Use                        | Configuration                           |
-| -------------- | ---------------------------------- | --------------------------------------- |
-| **Ollama**     | Local development, privacy-focused | `LLM_BASE_URL`, `LLM_MODEL_NAME`        |
-| **OpenAI**     | Production, high accuracy          | `LLM_API_KEY`, `LLM_MODEL_NAME`         |
-| **Gemini**     | Production, cost-effective         | `LLM_API_KEY`, `LLM_MODEL_NAME`         |
-| **Perplexity** | Production, web search integration | `LLM_API_KEY`, `LLM_MODEL_NAME`         |
-| **Mock**       | Testing, development               | No external dependencies                |
+| Provider       | Primary Use                        | Configuration                    |
+| -------------- | ---------------------------------- | -------------------------------- |
+| **Ollama**     | Local development, privacy-focused | `LLM_BASE_URL`, `LLM_MODEL_NAME` |
+| **OpenAI**     | Production, high accuracy          | `LLM_API_KEY`, `LLM_MODEL_NAME`  |
+| **Gemini**     | Production, cost-effective         | `LLM_API_KEY`, `LLM_MODEL_NAME`  |
+| **Perplexity** | Production, web search integration | `LLM_API_KEY`, `LLM_MODEL_NAME`  |
 
 #### Service Manager
 
@@ -378,11 +378,12 @@ PENDING → PROCESSING → [SUCCESS | PARTIAL_SUCCESS | ERROR]
 
 ### LLM Providers
 
-| Provider   | Use Case                   | Requirements              |
-| ---------- | -------------------------- | ------------------------- |
-| **Ollama** | Local development, privacy | Local Ollama installation |
-| **OpenAI** | Production, high accuracy  | OpenAI API key            |
-| **Mock**   | Testing, development       | No external dependencies  |
+| Provider       | Use Case                           | Requirements              |
+| -------------- | ---------------------------------- | ------------------------- |
+| **Ollama**     | Local development, privacy         | Local Ollama installation |
+| **OpenAI**     | Production, high accuracy          | OpenAI API key            |
+| **Gemini**     | Production, cost-effective         | Google API key            |
+| **Perplexity** | Production, web search integration | Perplexity API key        |
 
 ## ⚙️ Configuration & Deployment
 
@@ -496,6 +497,7 @@ class ProcessingMetrics(BaseModel):
 ```
 
 Additional metrics endpoints:
+
 - **Health Score**: `GET /api/metrics/health-score`
 - **Performance**: `GET /api/metrics/performance`
 
@@ -583,22 +585,24 @@ Additional metrics endpoints:
 ### Adding New API Endpoints
 
 1. **Create Router Module**:
+
    ```python
    # In src/incident_extractor/api/routers/new_feature.py
    from fastapi import APIRouter
-   
+
    router = APIRouter(prefix="/api/v1/new-feature", tags=["new-feature"])
-   
+
    @router.get("/")
    async def get_new_feature():
        return {"message": "New feature endpoint"}
    ```
 
 2. **Register Router**:
+
    ```python
    # In src/incident_extractor/api/app.py
    from .routers import new_feature
-   
+
    app.include_router(new_feature.router)
    ```
 
@@ -631,15 +635,6 @@ async def test_workflow_integration():
     workflow = await get_workflow()
     result = await workflow.run("Incident test text")
     assert result.status == ProcessingStatus.SUCCESS
-```
-
-#### Mock LLM Testing
-
-```python
-# Use MockLLMService for predictable testing
-@pytest.fixture
-def mock_llm_service():
-    return MockLLMService(config=mock_config)
 ```
 
 ### Code Quality Standards

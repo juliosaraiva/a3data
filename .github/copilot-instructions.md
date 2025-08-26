@@ -16,7 +16,7 @@ src/incident_extractor/
 ```
 
 ### **Key Architectural Patterns**
-- **Repository Pattern**: Abstract `LLMRepository` interface with concrete implementations (Ollama, OpenAI, Mock)
+- **Repository Pattern**: Abstract `LLMRepository` interface with concrete implementations (Ollama, OpenAI)
 - **Factory Pattern**: `LLMClientFactory` switches providers via `LLM_PROVIDER` env var
 - **Value Objects**: Immutable `IncidentDateTime` and `Location` with Brazilian format support
 - **Domain Entities**: `Incident` entity with business rules and validation
@@ -37,9 +37,9 @@ uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### **Testing Strategy**
 - Unit tests in `tests/unit/` following `test_*.py` pattern
-- Integration tests for LLM clients with mocking
+- Integration tests for LLM clients with proper mocking frameworks
 - Use `pytest-asyncio` for async test functions
-- Mock LLM responses using the `MockClient` implementation
+- Use testing frameworks like pytest-mock for LLM response mocking in tests
 
 ## 🛠️ Project-Specific Conventions
 
@@ -106,7 +106,7 @@ async def is_available(self) -> bool:
 - **Configuration**: Always use the enhanced Settings class, never direct env access
 - **Logging**: Use `structlog.get_logger(__name__)` for structured logging
 - **Type hints**: Required for all function parameters and return values (pyright strict mode)
-- **Testing**: Mock LLM clients using the provided `MockClient` for predictable tests
+- **Testing**: Use pytest-mock and other testing frameworks for predictable tests
 
 ## 🛠️ Use Tools available
 - DO NOT hesitate to use available tools and libraries to simplify your implementation.

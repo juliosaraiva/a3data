@@ -22,7 +22,7 @@ curl -X POST http://localhost:8000/api/v1/incidents/extract \
 ## ✨ Key Features
 
 - **Multi-Agent Processing**: LangGraph workflow with specialized agents (Supervisor, Preprocessor, Extractor)
-- **Multiple LLM Providers**: Local Ollama, OpenAI, Gemini, Perplexity, or Mock for testing
+- **Multiple LLM Providers**: Local Ollama, OpenAI, Gemini, Perplexity
 - **Brazilian Portuguese**: Native support for PT-BR language and date formats
 - **Type-Safe**: Strict typing with Pydantic and Pyright
 - **Production Ready**: Health checks, metrics, structured logging
@@ -54,7 +54,7 @@ Environment variables are configured automatically on first `make setup` from `.
 ### Core Settings
 
 ```env
-LLM_PROVIDER="ollama"          # ollama | openai | gemini | perplexity | mock
+LLM_PROVIDER="ollama"          # ollama | openai | gemini | perplexity
 LLM_MODEL_NAME="gemma3:4b"     # Model name (provider-specific)
 LLM_BASE_URL="http://localhost:11434"  # Ollama daemon URL
 LLM_TIMEOUT=30                 # Request timeout (seconds)
@@ -79,33 +79,26 @@ make switch-to-openai   # Prompts for API key and switches provider
 # Manually set: LLM_PROVIDER="openai" and LLM_API_KEY="your-key"
 ```
 
-#### Mock (Testing)
-
-```bash
-# Set in .env: LLM_PROVIDER="mock"
-# No external dependencies required
-```
-
 ## 💼 API Reference
 
 ### Endpoints
 
-| Method | Path                          | Description                  | Response            |
-| ------ | ----------------------------- | ---------------------------- | ------------------- |
-| GET    | `/api/health/`                | Basic health status          | `HealthStatus`      |
-| GET    | `/api/health/detailed`        | Detailed component status    | `HealthStatus`      |
-| GET    | `/api/health/live`            | Liveness probe               | JSON                |
-| GET    | `/api/health/ready`           | Readiness probe              | JSON                |
-| POST   | `/api/v1/incidents/extract`   | Extract incident information | `IncidentData`      |
-| GET    | `/api/metrics/`               | Processing metrics           | `ProcessingMetrics` |
-| GET    | `/api/metrics/health-score`   | Health score                 | JSON                |
-| GET    | `/api/metrics/performance`    | Performance metrics          | JSON                |
-| GET    | `/api/debug/system-info`      | System information           | JSON                |
-| GET    | `/api/debug/components`       | Component status             | JSON                |
-| GET    | `/api/debug/workflow-info`    | Workflow state (DEBUG only)  | JSON                |
-| POST   | `/api/debug/test-extraction`  | Test extraction (DEBUG only) | `IncidentData`      |
-| GET    | `/docs`                       | OpenAPI documentation        | HTML                |
-| GET    | `/openapi.json`               | OpenAPI specification        | JSON                |
+| Method | Path                         | Description                  | Response            |
+| ------ | ---------------------------- | ---------------------------- | ------------------- |
+| GET    | `/api/health/`               | Basic health status          | `HealthStatus`      |
+| GET    | `/api/health/detailed`       | Detailed component status    | `HealthStatus`      |
+| GET    | `/api/health/live`           | Liveness probe               | JSON                |
+| GET    | `/api/health/ready`          | Readiness probe              | JSON                |
+| POST   | `/api/v1/incidents/extract`  | Extract incident information | `IncidentData`      |
+| GET    | `/api/metrics/`              | Processing metrics           | `ProcessingMetrics` |
+| GET    | `/api/metrics/health-score`  | Health score                 | JSON                |
+| GET    | `/api/metrics/performance`   | Performance metrics          | JSON                |
+| GET    | `/api/debug/system-info`     | System information           | JSON                |
+| GET    | `/api/debug/components`      | Component status             | JSON                |
+| GET    | `/api/debug/workflow-info`   | Workflow state (DEBUG only)  | JSON                |
+| POST   | `/api/debug/test-extraction` | Test extraction (DEBUG only) | `IncidentData`      |
+| GET    | `/docs`                      | OpenAPI documentation        | HTML                |
+| GET    | `/openapi.json`              | OpenAPI specification        | JSON                |
 
 ### Example Request/Response
 
@@ -175,9 +168,10 @@ make v               # Quick alias (6 keystrokes)
 ```
 
 This validates 14 endpoints across:
+
 - **Health**: `/api/health/*` endpoints
 - **Extraction**: `/api/v1/incidents/extract`
-- **Metrics**: `/api/metrics/*` endpoints  
+- **Metrics**: `/api/metrics/*` endpoints
 - **Debug**: `/api/debug/*` endpoints
 - **Documentation**: `/docs`, `/openapi.json`
 
@@ -203,7 +197,7 @@ The system uses a **multi-agent approach** with LangGraph orchestration:
                                 ▼
                     ┌─────────────────────────────────────────┐
                     │        LLM Services                     │
-                    │   Ollama │ OpenAI │ Gemini │ Mock       │
+                    │   Ollama │ OpenAI │ Gemini │ Perplexity │
                     └─────────────────────────────────────────┘
 ```
 

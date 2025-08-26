@@ -1,7 +1,7 @@
 """LangGraph workflow definition for the incident extraction system."""
 
 import asyncio
-from typing import Any, Dict, Literal
+from typing import Any, Literal
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -258,7 +258,7 @@ class IncidentExtractionWorkflow:
 
             return error_state
 
-    async def run_with_timeout(self, texto: str, options: Dict[str, Any] | None = None, timeout: int = 120) -> AgentState:
+    async def run_with_timeout(self, texto: str, options: dict[str, Any] | None = None, timeout: int = 120) -> AgentState:
         """
         Run workflow with timeout protection.
 
@@ -272,7 +272,7 @@ class IncidentExtractionWorkflow:
         """
         try:
             return await asyncio.wait_for(self.run(texto, options), timeout=timeout)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self.logger.error(f"Workflow timed out after {timeout} seconds")
 
             # Create timeout error state
@@ -283,7 +283,7 @@ class IncidentExtractionWorkflow:
 
             return timeout_state
 
-    def get_workflow_info(self) -> Dict[str, Any]:
+    def get_workflow_info(self) -> dict[str, Any]:
         """
         Get information about the workflow structure.
 

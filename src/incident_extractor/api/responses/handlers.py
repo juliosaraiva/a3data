@@ -9,25 +9,24 @@ proper logging and recovery guidance.
 import asyncio
 import traceback
 import uuid
-from typing import Dict, Optional
 
-from fastapi import Request, HTTPException
+from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError as PydanticValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from incident_extractor.config import get_logger
 from incident_extractor.api.responses.exceptions import (
     BaseAPIException,
-    ValidationError,
+    ConfigurationError,
     ExtractionError,
+    RateLimitError,
     ServiceUnavailableError,
     TimeoutError,
-    ConfigurationError,
-    RateLimitError,
+    ValidationError,
 )
 from incident_extractor.api.responses.models import ErrorResponse
+from incident_extractor.config import get_logger
 
 logger = get_logger("app.exception_handlers")
 
@@ -55,7 +54,7 @@ def get_request_id(request: Request) -> str:
     return request_id
 
 
-def get_processing_time(request: Request) -> Optional[float]:
+def get_processing_time(request: Request) -> float | None:
     """
     Extract processing time from request state.
 
@@ -200,7 +199,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     processing_time_ms = get_processing_time(request)
 
     # Process field errors
-    field_errors: Dict[str, list[str]] = {}
+    field_errors: dict[str, list[str]] = {}
     for error in exc.errors():
         field_path = ".".join(str(loc) for loc in error["loc"])
         error_msg = error["msg"]
@@ -262,7 +261,7 @@ async def pydantic_validation_exception_handler(request: Request, exc: PydanticV
     processing_time_ms = get_processing_time(request)
 
     # Process field errors
-    field_errors: Dict[str, list[str]] = {}
+    field_errors: dict[str, list[str]] = {}
     for error in exc.errors():
         field_path = ".".join(str(loc) for loc in error["loc"])
         error_msg = error["msg"]

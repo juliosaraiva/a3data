@@ -110,13 +110,13 @@ class OllamaLLMService(BaseLLMService):
             # Use asyncio.wait_for with proper timeout handling
             try:
                 response = await asyncio.wait_for(asyncio.to_thread(self.client.invoke, full_prompt), timeout=self.config.timeout)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 raise LLMTimeoutError(f"Ollama request timed out after {self.config.timeout} seconds")
 
             self.logger.info("Successfully generated response", response_length=len(response))
             return response
 
-        except asyncio.TimeoutError:
+        except TimeoutError:
             error_msg = f"Ollama request timed out after {self.config.timeout} seconds"
             self.logger.error(error_msg)
             raise LLMTimeoutError(error_msg)

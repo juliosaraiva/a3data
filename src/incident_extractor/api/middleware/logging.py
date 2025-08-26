@@ -17,7 +17,6 @@ import logging
 import time
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from fastapi import Request, Response
 
@@ -36,7 +35,7 @@ class RequestLoggingMiddleware:
         log_request_body: bool = False,
         log_response_body: bool = False,
         max_body_size: int = 1024,
-        exclude_paths: Optional[list[str]] = None,
+        exclude_paths: list[str] | None = None,
     ):
         """
         Initialize request logging middleware.
@@ -215,7 +214,7 @@ class RequestLoggingMiddleware:
 
         return {key: "***REDACTED***" if key.lower() in sensitive_headers else value for key, value in headers.items()}
 
-    async def _get_request_body(self, request: Request) -> Optional[str]:
+    async def _get_request_body(self, request: Request) -> str | None:
         """Safely extract request body for logging."""
         try:
             body = await request.body()
@@ -225,7 +224,7 @@ class RequestLoggingMiddleware:
         except Exception:
             return "<unable to read body>"
 
-    async def _get_response_body(self, response: Response) -> Optional[bytes]:
+    async def _get_response_body(self, response: Response) -> bytes | None:
         """Extract response body for logging."""
         # This is a simplified implementation
         # In production, you might want to use response.body if available

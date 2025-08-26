@@ -8,8 +8,9 @@ configurations, structured logging, and production features like rotation.
 import logging
 import logging.handlers
 import sys
+from collections.abc import MutableMapping
 from pathlib import Path
-from typing import Any, MutableMapping
+from typing import Any
 
 import structlog
 from rich.console import Console
