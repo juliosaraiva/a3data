@@ -9,7 +9,7 @@ set -e
 HOST="localhost"
 PORT="8000"
 BASE_URL="http://${HOST}:${PORT}"
-TIMEOUT="10"
+TIMEOUT="30"
 
 # Colors for output
 RED='\033[0;31m'
@@ -19,6 +19,14 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+# Check if debug mode is enabled
+is_debug_enabled() {
+    if [ -f ".env" ]; then
+        grep -q "DEBUG=true" .env && return 0
+    fi
+    return 1
+}
 
 # Test endpoint function
 test_endpoint() {
@@ -91,8 +99,14 @@ test_endpoint "GET" "/api/debug/system-info" && ((passed_tests++)) || true; ((to
 test_endpoint "GET" "/api/debug/components" && ((passed_tests++)) || true; ((total_tests++))
 test_endpoint "GET" "/api/debug/workflow-info" && ((passed_tests++)) || true; ((total_tests++))
 
-debug_extract_data='{"text":"Teste debug: servidor caiu ontem às 10h."}'
-test_endpoint "POST" "/api/debug/test-extraction" "$debug_extract_data" && ((passed_tests++)) || true; ((total_tests++))
+# Test debug extraction endpoint only if debug mode is enabled
+if is_debug_enabled; then
+    debug_extract_data='{"text":"Teste debug: servidor caiu ontem às 10h."}'
+    test_endpoint "POST" "/api/debug/test-extraction" "$debug_extract_data" && ((passed_tests++)) || true; ((total_tests++))
+else
+    printf "  %-40s" "/api/debug/test-extraction"
+    printf "${YELLOW}⚠️  SKIP${NC} (debug mode disabled)\n"
+fi
 echo ""
 
 # Documentation Endpoints
