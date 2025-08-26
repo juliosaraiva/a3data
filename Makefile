@@ -1,4 +1,4 @@
-.PHONY: help setup dev install run run-prod test format lint lint-fix type-check quality clean reset health check-deps check-env check-llm ollama-install ollama-start ollama-pull ollama-setup switch-to-openai switch-to-ollama logs
+.PHONY: help setup dev install run run-prod test format lint lint-fix type-check quality clean reset health check-deps check-env check-llm ollama-install ollama-start ollama-pull ollama-setup switch-to-openai switch-to-ollama logs api-check validate demo quick-start
 .DEFAULT_GOAL := help
 
 PROJECT_NAME := incident-extractor
@@ -16,7 +16,7 @@ help: ## 📖 Show available commands (this help)
 	@echo "--------------------------------"
 	@grep -E '^[a-zA-Z0-9_.-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
-	@echo "Shortcuts: \033[33ms\033[0m=setup \033[33mf\033[0m=format \033[33ml\033[0m=lint-fix \033[33mq\033[0m=quality \033[33mt\033[0m=test \033[33mh\033[0m=health"
+	@echo "Shortcuts: \033[33ms\033[0m=setup \033[33mf\033[0m=format \033[33ml\033[0m=lint-fix \033[33mq\033[0m=quality \033[33mt\033[0m=test \033[33mh\033[0m=health \033[33mv\033[0m=validate"
 
 setup: ## 🚀 One-command project setup (env + deps + ollama + health)
 	@[ -f $(ENV_FILE) ] || cp .env.example $(ENV_FILE)
@@ -24,6 +24,26 @@ setup: ## 🚀 One-command project setup (env + deps + ollama + health)
 	@echo "[2/4] Ensuring LLM provider readiness"; $(MAKE) ollama-setup >/dev/null || true
 	@echo "[3/4] Running health checks"; $(MAKE) health
 	@echo "[4/4] Done. Run 'make run' to start the server."
+
+quick-start: ## 🏃 Setup and start server immediately
+	$(MAKE) setup
+	$(MAKE) run
+
+demo: ## 🎭 Run interactive demo (setup + server + API validation)
+	@echo "🎭 Starting interactive demo..."
+	@if pgrep -f "uvicorn.*main:app" > /dev/null; then \
+		echo "Server already running, validating API..."; \
+		$(MAKE) validate; \
+	else \
+		echo "Starting server in background..."; \
+		$(MAKE) run &; \
+		SERVER_PID=$$!; \
+		echo "Waiting for server to start..."; \
+		sleep 5; \
+		echo "Validating API..."; \
+		$(MAKE) validate || true; \
+		echo "Demo complete. Server running with PID: $$SERVER_PID"; \
+	fi
 
 install: ## 📦 Install production dependencies only
 	uv sync --no-dev
@@ -143,6 +163,14 @@ switch-to-ollama: ## 🔁 Switch .env to Ollama default model
 logs: ## 📜 Tail application log (if exists)
 	@if [ -f logs/app.log ]; then tail -50 logs/app.log; else echo "No log file yet"; fi
 
+# ------------------------- API Validation -------------------------
+api-check: ## 🔍 Quick API health check with HTTPie
+	@command -v http >/dev/null || { echo "HTTPie required: pip install httpie"; exit 1; }
+	./scripts/api_check.sh
+
+validate: ## ✅ Validate API endpoints (alias for api-check)
+	$(MAKE) api-check
+
 # Aliases
 s: setup ## ⚡ Alias for setup
 f: format ## ⚡ Alias for format
@@ -150,3 +178,4 @@ l: lint-fix ## ⚡ Alias for lint-fix
 q: quality ## ⚡ Alias for quality
 t: test ## ⚡ Alias for test
 h: health ## ⚡ Alias for health
+v: validate ## ⚡ Alias for validate

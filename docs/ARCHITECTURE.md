@@ -105,15 +105,25 @@ The Incident Extractor API is an intelligent system designed to extract structur
                     └─────────────────────────────────────────────────┘
 ```
 
-### Folder Structure
-
+### Folder Structure (Current State)
 ```
 src/incident_extractor/
-├── agents/              # Multi-agent system implementation
+├── agents/          # Multi-agent system implementation
 │   ├── __init__.py
 │   ├── supervisor.py    # Workflow orchestration agent
 │   ├── preprocessor.py  # Text cleaning and normalization agent
 │   └── extractor.py     # Information extraction agent
+├── api/             # FastAPI application and routing
+│   ├── __init__.py
+│   ├── app.py          # FastAPI application factory
+│   ├── dependencies.py # Dependency injection
+│   ├── middleware/     # Custom middleware components
+│   ├── responses/      # Response utilities
+│   └── routers/        # API route definitions
+│       ├── health.py   # Health check endpoints
+│       ├── extraction.py # Incident extraction endpoints
+│       ├── metrics.py  # Metrics and monitoring endpoints
+│       └── debug.py    # Debug and development endpoints
 ├── config/              # Configuration and settings
 │   ├── __init__.py
 │   ├── config.py        # Application settings
@@ -124,12 +134,11 @@ src/incident_extractor/
 │   └── workflow.py     # Workflow orchestration logic
 ├── models/              # Data models and schemas
 │   ├── __init__.py
-│   ├── schemas.py      # Pydantic models for API and internal use
-│   └── graph_models.py # LangGraph state models
+│   └── schemas.py      # Pydantic models for API and internal use
 ├── services/            # Service layer abstractions
 │   ├── __init__.py
 │   └── llm_service.py  # LLM service implementations
-└── main.py             # FastAPI application entry point
+└── main.py             # Application entry point and development server
 ```
 
 ## 🔧 Core Components
@@ -213,11 +222,13 @@ START → Supervisor → [Preprocessor|Extractor] → Supervisor → [Retry|Fini
 
 #### Supported Providers
 
-| Provider   | Primary Use                        | Configuration                     |
-| ---------- | ---------------------------------- | --------------------------------- |
-| **Ollama** | Local development, privacy-focused | `OLLAMA_BASE_URL`, `OLLAMA_MODEL` |
-| **OpenAI** | Production, high accuracy          | `OPENAI_API_KEY`, `OPENAI_MODEL`  |
-| **Mock**   | Testing, development               | No external dependencies          |
+| Provider       | Primary Use                        | Configuration                           |
+| -------------- | ---------------------------------- | --------------------------------------- |
+| **Ollama**     | Local development, privacy-focused | `LLM_BASE_URL`, `LLM_MODEL_NAME`        |
+| **OpenAI**     | Production, high accuracy          | `LLM_API_KEY`, `LLM_MODEL_NAME`         |
+| **Gemini**     | Production, cost-effective         | `LLM_API_KEY`, `LLM_MODEL_NAME`         |
+| **Perplexity** | Production, web search integration | `LLM_API_KEY`, `LLM_MODEL_NAME`         |
+| **Mock**       | Testing, development               | No external dependencies                |
 
 #### Service Manager
 
@@ -435,7 +446,10 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 #### Health Checks
 
-- **Endpoint**: `GET /health`
+- **Primary Endpoint**: `GET /api/health/`
+- **Detailed Health**: `GET /api/health/detailed`
+- **Liveness Probe**: `GET /api/health/live`
+- **Readiness Probe**: `GET /api/health/ready`
 - **Components Checked**: LLM services, workflow validation, system metrics
 - **Response**: Structured health status with component details
 
@@ -468,18 +482,22 @@ uv run uvicorn main:app --host 0.0.0.0 --port 8000
 
 ### Metrics & Monitoring
 
-#### Key Metrics (`GET /metrics`)
+##### Key Metrics (`GET /api/metrics/`)
 
 ```python
 class ProcessingMetrics(BaseModel):
     total_requests: int = 0
-    successful_extractions: int = 0
-    failed_extractions: int = 0
+    successful_requests: int = 0
+    failed_requests: int = 0
     average_processing_time: float = 0.0
     total_processing_time: float = 0.0
-    agent_execution_times: Dict[str, float] = Field(default_factory=dict)
+    agent_execution_counts: Dict[str, int] = Field(default_factory=dict)
     llm_provider_usage: Dict[str, int] = Field(default_factory=dict)
 ```
+
+Additional metrics endpoints:
+- **Health Score**: `GET /api/metrics/health-score`
+- **Performance**: `GET /api/metrics/performance`
 
 #### Health Check Components
 
@@ -560,6 +578,35 @@ class ProcessingMetrics(BaseModel):
    # In config.py
    new_provider_api_key: Optional[str] = None
    new_provider_base_url: str = "https://api.newprovider.com"
+   ```
+
+### Adding New API Endpoints
+
+1. **Create Router Module**:
+   ```python
+   # In src/incident_extractor/api/routers/new_feature.py
+   from fastapi import APIRouter
+   
+   router = APIRouter(prefix="/api/v1/new-feature", tags=["new-feature"])
+   
+   @router.get("/")
+   async def get_new_feature():
+       return {"message": "New feature endpoint"}
+   ```
+
+2. **Register Router**:
+   ```python
+   # In src/incident_extractor/api/app.py
+   from .routers import new_feature
+   
+   app.include_router(new_feature.router)
+   ```
+
+3. **Add Tests**:
+   ```python
+   def test_new_feature_endpoint(client):
+       response = client.get("/api/v1/new-feature/")
+       assert response.status_code == 200
    ```
 
 ### Testing Guidelines
@@ -657,6 +704,6 @@ uv run pyright .
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-01-20
-**Architecture Version**: Based on implementation as of commit HEAD
+**Document Version**: 1.1
+**Last Updated**: 2025-08-25
+**Architecture Version**: Based on current implementation with API routing, multi-provider LLM support, and comprehensive health checks

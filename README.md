@@ -6,7 +6,7 @@ An intelligent FastAPI service that extracts structured incident information fro
 
 ```bash
 # 1. Clone and setup
-git clone https://github.com/your-org/incident-extractor.git
+git clone <repository-url>
 cd incident-extractor
 make setup     # One-command setup: dependencies + environment + LLM
 
@@ -14,7 +14,7 @@ make setup     # One-command setup: dependencies + environment + LLM
 make run       # http://localhost:8000
 
 # 3. Test the API
-curl -X POST http://localhost:8000/extract \
+curl -X POST http://localhost:8000/api/v1/incidents/extract \
   -H 'Content-Type: application/json' \
   -d '{"text":"Ontem às 14h no escritório de São Paulo houve falha no servidor principal, impactando o sistema de faturamento por 2 horas."}'
 ```
@@ -22,7 +22,7 @@ curl -X POST http://localhost:8000/extract \
 ## ✨ Key Features
 
 - **Multi-Agent Processing**: LangGraph workflow with specialized agents (Supervisor, Preprocessor, Extractor)
-- **Multiple LLM Providers**: Local Ollama, OpenAI, or Mock for testing
+- **Multiple LLM Providers**: Local Ollama, OpenAI, Gemini, Perplexity, or Mock for testing
 - **Brazilian Portuguese**: Native support for PT-BR language and date formats
 - **Type-Safe**: Strict typing with Pydantic and Pyright
 - **Production Ready**: Health checks, metrics, structured logging
@@ -54,7 +54,7 @@ Environment variables are configured automatically on first `make setup` from `.
 ### Core Settings
 
 ```env
-LLM_PROVIDER="ollama"          # ollama | openai | mock
+LLM_PROVIDER="ollama"          # ollama | openai | gemini | perplexity | mock
 LLM_MODEL_NAME="gemma3:4b"     # Model name (provider-specific)
 LLM_BASE_URL="http://localhost:11434"  # Ollama daemon URL
 LLM_TIMEOUT=30                 # Request timeout (seconds)
@@ -90,20 +90,29 @@ make switch-to-openai   # Prompts for API key and switches provider
 
 ### Endpoints
 
-| Method | Path                   | Description                  | Response            |
-| ------ | ---------------------- | ---------------------------- | ------------------- |
-| GET    | `/`                    | Service information          | JSON                |
-| GET    | `/health`              | Component health status      | `HealthStatus`      |
-| POST   | `/extract`             | Extract incident information | `IncidentData`      |
-| GET    | `/metrics`             | Processing metrics           | `ProcessingMetrics` |
-| POST   | `/debug/workflow-info` | Workflow state (DEBUG only)  | JSON                |
+| Method | Path                          | Description                  | Response            |
+| ------ | ----------------------------- | ---------------------------- | ------------------- |
+| GET    | `/api/health/`                | Basic health status          | `HealthStatus`      |
+| GET    | `/api/health/detailed`        | Detailed component status    | `HealthStatus`      |
+| GET    | `/api/health/live`            | Liveness probe               | JSON                |
+| GET    | `/api/health/ready`           | Readiness probe              | JSON                |
+| POST   | `/api/v1/incidents/extract`   | Extract incident information | `IncidentData`      |
+| GET    | `/api/metrics/`               | Processing metrics           | `ProcessingMetrics` |
+| GET    | `/api/metrics/health-score`   | Health score                 | JSON                |
+| GET    | `/api/metrics/performance`    | Performance metrics          | JSON                |
+| GET    | `/api/debug/system-info`      | System information           | JSON                |
+| GET    | `/api/debug/components`       | Component status             | JSON                |
+| GET    | `/api/debug/workflow-info`    | Workflow state (DEBUG only)  | JSON                |
+| POST   | `/api/debug/test-extraction`  | Test extraction (DEBUG only) | `IncidentData`      |
+| GET    | `/docs`                       | OpenAPI documentation        | HTML                |
+| GET    | `/openapi.json`               | OpenAPI specification        | JSON                |
 
 ### Example Request/Response
 
 **Request:**
 
 ```bash
-curl -X POST http://localhost:8000/extract \
+curl -X POST http://localhost:8000/api/v1/incidents/extract \
   -H 'Content-Type: application/json' \
   -d '{
     "text": "Hoje às 09:30 no datacenter SP-01 houve queda de energia que causou indisponibilidade dos serviços críticos por 45 minutos."
@@ -151,7 +160,26 @@ uv run pytest -v     # Verbose output
 make logs             # View application logs
 make clean            # Remove cache files
 make reset            # Clean + reinstall environment
+make validate         # Quick API health check
+make v                # Alias for validate
 ```
+
+## 🔍 API Health Checks
+
+The system includes comprehensive API validation:
+
+```bash
+make validate         # Run API health check (~15 seconds)
+make api-check        # Alternative command
+make v               # Quick alias (6 keystrokes)
+```
+
+This validates 14 endpoints across:
+- **Health**: `/api/health/*` endpoints
+- **Extraction**: `/api/v1/incidents/extract`
+- **Metrics**: `/api/metrics/*` endpoints  
+- **Debug**: `/api/debug/*` endpoints
+- **Documentation**: `/docs`, `/openapi.json`
 
 ## 🏗️ Architecture Overview
 
@@ -173,10 +201,10 @@ The system uses a **multi-agent approach** with LangGraph orchestration:
                     └───────────────────────────────────────┘
                                 │
                                 ▼
-                    ┌─────────────────────────────────┐
-                    │        LLM Services             │
-                    │   Ollama │ OpenAI │ Mock        │
-                    └─────────────────────────────────┘
+                    ┌─────────────────────────────────────────┐
+                    │        LLM Services                     │
+                    │   Ollama │ OpenAI │ Gemini │ Mock       │
+                    └─────────────────────────────────────────┘
 ```
 
 ### Project Structure
@@ -184,10 +212,11 @@ The system uses a **multi-agent approach** with LangGraph orchestration:
 ```
 src/incident_extractor/
 ├── agents/        # Multi-agent system (Supervisor, Preprocessor, Extractor)
+├── api/           # FastAPI routers, middleware, and application setup
 ├── config/        # Settings, logging, LLM configuration
 ├── graph/         # LangGraph workflow orchestration
 ├── models/        # Pydantic models and schemas
-└── services/      # LLM service abstractions
+└── services/      # LLM service abstractions and implementations
 ```
 
 ### Processing Flow
@@ -267,7 +296,7 @@ git commit -m "feat: your change description"
 
 1. **New Agents**: Extend the multi-agent system in `src/incident_extractor/agents/`
 2. **LLM Providers**: Add support for new providers in `src/incident_extractor/services/`
-3. **API Endpoints**: Extend FastAPI routes in `main.py`
+3. **API Endpoints**: Extend FastAPI routes in `src/incident_extractor/api/routers/`
 
 ## 📜 License
 
@@ -278,96 +307,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 **Documentation**: For detailed architecture and implementation details, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md)
 
 **Last Updated**: Based on implementation as of 2025-01-20
-
-## 📂 Current Folder Structure
-
-```
-src/incident_extractor/
-  agents/        # Preprocessor, extractor, supervisor agent logic
-  config/        # Settings, logging, llm configuration and middleware
-  graph/         # LangGraph workflow orchestration (workflow.py)
-  models/        # Pydantic models: requests, responses, state, metrics
-  services/      # LLM service manager & provider handling
-```
-
-## 🧠 Workflow Overview
-
-The extraction pipeline uses a LangGraph workflow with three main agents:
-
-1. Preprocessor agent: normalizes, cleans and contextualizes raw text
-2. Extractor agent: interacts with the configured LLM provider
-3. Supervisor agent: validates / reconciles outputs and finalizes state
-
-State transitions are tracked; metrics accumulate processing statistics for observability.
-
-## 🧾 Environment Keys (excerpt from `.env.example`)
-
-```env
-LLM_PROVIDER="ollama"        # ollama | openai | gemini | perplexity | mock
-LLM_MODEL_NAME="gemma3:4b"
-LLM_BASE_URL="http://localhost:11434"
-LLM_TEMPERATURE=0.1
-LLM_TIMEOUT=30
-LOG_LEVEL="INFO"
-LOG_FORMAT="json"
-LOG_FILE_ENABLED="true"
-LOG_FILE_PATH="logs/app.log"
-DEBUG=false
-```
-
-Only cloud providers (openai, gemini, perplexity) require `LLM_API_KEY`.
-
-## 🔁 Provider Switching
-
-```bash
-make switch-to-ollama      # Set provider + model locally
-make switch-to-openai      # Prompt for API key & switch
-./scripts/config.sh ollama # Alternative script interface
-./scripts/config.sh openai
-```
-
-## 🔍 Health Internals
-
-`/health` assembles:
-
-- LLM service availability (`service_manager.health_check_all()`)
-- Workflow validation (`workflow.validate_workflow()`)
-- Current processing metrics snapshot
-  Overall status = healthy if at least one LLM healthy AND workflow validations pass.
-
-## 🧪 Testing & Quality (Targets Recap)
-
-```bash
-make test        # pytest
-make format      # ruff format
-make lint        # ruff check (no fix)
-make lint-fix    # ruff check --fix
-make type-check  # pyright
-make quality     # all + tests
-```
-
-Helper scripts mirror these: `./scripts/dev.sh format|test|fix|serve|health`.
-
-## �️ Troubleshooting Additions
-
-| Symptom            | Cause                              | Action                                       |
-| ------------------ | ---------------------------------- | -------------------------------------------- |
-| 422 short text     | <10 chars                          | Provide more descriptive incident text       |
-| 422 long text      | Exceeds `max_preprocessing_length` | Shorten input or raise limit in settings/env |
-| 408 timeout        | LLM slow / large prompt            | Reduce text size or increase `LLM_TIMEOUT`   |
-| 500 internal error | LLM/provider failure               | Check logs (`make logs`) & `/health`         |
-
-## 🧩 Future Enhancements (Suggestions)
-
-- Add persisted audit trail of extractions (DB or file-based)
-- Implement circuit breaker around repeated LLM failures
-- Expose Prometheus metrics adapter for `/metrics`
-- Add streaming endpoint for progressive extraction feedback
-
-## 📄 License
-
-MIT (See LICENSE)
-
----
-
-**Updated documentation reflects current simplified architecture (agents + graph + services) replacing earlier layered DDD scaffolding not present in code.**
